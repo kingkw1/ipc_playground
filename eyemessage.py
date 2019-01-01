@@ -103,3 +103,26 @@ class binmssg():
         """ Convert float to 32-bit binary string. """
         [d] = struct.unpack(">l", struct.pack(">f", value))
         return '{:032b}'.format(d)
+
+def agg2file():
+    f = open("temp.txt","w+")
+    start = time.time()
+    #f.write("%.2d start datenum\r" % (start))
+    while time.time() - start < 3600:
+        try:
+            data = self._data_queue.get(timeout=1)
+            retTime = time.time()-start
+            try:
+                time.sleep(.100)
+                while not self._data_queue.empty():
+                    data.extend(self._data_queue.get(block=False))
+            except Empty:
+                pass
+            print ("%d   Writing data with %d points" % (self._sampNum, len(data)))
+            for x in range(0, len(data)):
+                self._sampNum += 1
+                f.write("%d %0.4f %d %d %d %d %d %d \r" % (self._sampNum, retTime, data[x]._accel_data.x_val, data[x]._accel_data.y_val, data[x]._accel_data.z_val, data[x]._gyro_data.x_val, data[x]._gyro_data.y_val, data[x]._gyro_data.z_val))
+        except Empty:
+            pass
+    f.write("%d recorded in %0.4f seconds\r" % (self._sampNum, time.time()-start))
+    f.close()
