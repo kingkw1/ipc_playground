@@ -1,6 +1,7 @@
 import time
 import random
 import struct
+import os
 
 """
 TODO: make message a generator
@@ -28,6 +29,8 @@ class eyedata():
         PupilDiameter : Int32U
         	Diameter of the pupil in image pixels
         """
+        self.packorg = struct.Struct('QI?fffI')
+
         now = time.time()
         self.timestamp_s = int(now)
         self.timestamp_ns = int((now-int(now))*1e9)
@@ -45,9 +48,9 @@ class eyedata():
             self.ypos = random.random()
             self.dia = random.randrange(1,500)
 
-class packing(object):
-    def __init__(self):
-        self.packorg = struct.Struct('QI?fffI')
+class packing(eyedata):
+    # def __init__(self):
+    #     self.packorg = struct.Struct('QI?fffI')
 
     def encode(self, eyedata):
         mssg = self.packorg.pack(eyedata.timestamp_s, eyedata.timestamp_ns, eyedata.eyed, eyedata.conf, eyedata.xpos, eyedata.ypos, eyedata.dia)
@@ -104,25 +107,28 @@ class binmssg():
         [d] = struct.unpack(">l", struct.pack(">f", value))
         return '{:032b}'.format(d)
 
-def agg2file():
-    f = open("temp.txt","w+")
-    start = time.time()
-    #f.write("%.2d start datenum\r" % (start))
-    while time.time() - start < 3600:
-        try:
-            data = self._data_queue.get(timeout=1)
-            retTime = time.time()-start
-            try:
-                time.sleep(.100)
-                while not self._data_queue.empty():
-                    data.extend(self._data_queue.get(block=False))
-            except Empty:
-                pass
-            print ("%d   Writing data with %d points" % (self._sampNum, len(data)))
-            for x in range(0, len(data)):
-                self._sampNum += 1
-                f.write("%d %0.4f %d %d %d %d %d %d \r" % (self._sampNum, retTime, data[x]._accel_data.x_val, data[x]._accel_data.y_val, data[x]._accel_data.z_val, data[x]._gyro_data.x_val, data[x]._gyro_data.y_val, data[x]._gyro_data.z_val))
-        except Empty:
-            pass
-    f.write("%d recorded in %0.4f seconds\r" % (self._sampNum, time.time()-start))
-    f.close()
+class aggregator(object):
+    # self.packorg = struct.Struct('QI?fffI')
+
+    def __init__(self,fname,fdir = 'test_datastore'):
+        self.file = open(os.path.join(os.getcwd(),fdir,fname),"w")
+
+    def write(self,eyedata):
+        self.file.write(" %d %d %d %f %f %f %d \r" % (eyedata.timestamp_s, eyedata.timestamp_ns, eyedata.eyed, eyedata.conf, eyedata.xpos, eyedata.ypos, eyedata.dia))
+
+    def close(self):
+        self.file.close()
+
+# TODO: checktestfile
+def checktestfile(fname,fdir = 'test_datastore'):
+    testfile = open(os.path.join(os.getcwd(),fdir,fname),"r")
+    print('Checking file...')
+
+    # read in select lines of data
+    # verify the timestamps
+
+    testfile.close()
+
+# TODO: seedata
+def seedata():
+    print('Reading data...')
