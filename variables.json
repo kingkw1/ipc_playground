@@ -1,0 +1,51 @@
+{
+  "headers": [
+    {
+      "varname": "mssgtype",
+      "varformat": "I"
+    },
+    {
+      "varname": "timestamp_s",
+      "varformat": "I"
+    },
+    {
+      "varname": "timestamp_ns",
+      "varformat": "I"
+    }
+  ],
+  "data": [
+    {
+      "varname": "eyed",
+      "varformat": "?",
+      "genrand": "random.randint",
+      "randargin":{
+        "a": 0,
+        "b": 1
+      }
+    },
+    {
+      "varname": "conf",
+      "varformat": "f",
+      "genrand": "random.random"
+    },
+    {
+      "varname": "xpos",
+      "varformat": "f",
+      "genrand": "random.random"
+    },
+    {
+      "varname": "ypos",
+      "varformat": "f",
+      "genrand": "random.random"
+    },
+    {
+      "varname": "dia",
+      "varformat": "I",
+      "genrand": "random.randint",
+      "randargin":{
+        "a": 0,
+        "b": 500
+      }
+    }
+  ]
+}

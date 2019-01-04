@@ -4,10 +4,34 @@ import os
 import json
 import functools
 
-varfile = 'data_vars.json'
+"""
+Use following code to monitor ram usage and timings:
+import ipython_memory_usage.ipython_memory_usage as imu
+"""
+varfile = 'variables.json'
 
 with open(varfile, 'r') as f:
-        data_vars = json.load(f)
+        all_vars = json.load(f)
+
+varlist = []
+packlist = ''
+funlist = []
+for iheadvar in all_vars['headers']:
+    varlist.append(iheadvar['varname'])
+    packlist += iheadvar['varformat']
+
+for idatavar in all_vars['data']:
+    varlist.append(idatavar['varname'])
+    packlist += idatavar['varformat']
+    if 'randargin' in idatavar:
+        funlist.append(functools.partial(eval(idatavar['genrand']),**idatavar['randargin']))
+    else:
+        funlist.append(eval(idatavar['genrand']))
+
+def genmssgvals():
+    # Generate timestamps
+    # Generate vals from funlist
+    return mssg
 
 class mssgvar:
     def __init__(self, vardict):
@@ -15,24 +39,11 @@ class mssgvar:
         self.varformat =  vardict['varformat']
         self.genrand = functools.partial(eval(vardict['genrand']),**vardict['randargin'])
 
-class mssgstruct:
-    def __init__(self,data_vars):
-        self.packorg =[]
-        for ivar in data_vars:
-            mssgvar[vardict]
-
-class AccelerometerData(Icm20689Data):
-    def __init__(self, x_val, y_val, z_val):
-        self.x_val = x_val
-
-    def serialize(self):
-        return struct.pack('!ddd', self.x_val, self.y_val, self.z_val)
-
-    def __repr__(self):
-        return "%lf %lf %lf" % (self.x_val, self.y_val, self.z_val)
-
 class datamssg:
-    def __init__(self):
-        now = time.time()
-        self.timestamp_s = int(now)
-        self.timestamp_ns = int((now-int(now))*1e9)
+    __slots__ = ('x','y')
+    def __init__(self, x, y):
+        self.x = 0
+        self.y = 0
+    def genrand(self):
+        self.x = 1
+        self.y = 1
