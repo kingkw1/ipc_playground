@@ -3,18 +3,19 @@ import random
 import struct
 import os
 
-"""
-TODO: make message a generator
+class mssgvar:
+    def __init_(self, varname, varformat, randfcn):
+        self.varname = varname
+        self.varformat = varformat
+        self.genrand = randfcn
 
-"""
-#def bin2float32(bin32):
-#    return struct.unpack('f', struct.pack('I', bin32))[0]
-#
-#def float2bin32(f32):
-#    return ''.join(bin(ord(c)).replace('0b', '').rjust(8, '0') for c in struct.pack('!f', f32))
-#
+class mssgstruct:
+    def __init__(self):
+        self.packorg =[]
+        self.eyed = mssgvar('eyed','?',random.randint(0,1))
+
 class eyedata():
-    def __init__(self, eyed=None, conf=None, x=None, y=None, d=None):
+    def __init__(self, mssgtype=None, eyed=None, conf=None, x=None, y=None, d=None):
         """
         Timestamp : Seconds: Int64U, Nanoseconds: Int32U
 	       Timestamp of message received
@@ -29,19 +30,25 @@ class eyedata():
         PupilDiameter : Int32U
         	Diameter of the pupil in image pixels
         """
-        self.packorg = struct.Struct('QI?fffI')
+        # TODO: implement as an enumerator -- packorg has ordered structure to
+        # that is not present in class property structure
+        self.packorg = struct.Struct('IQI?fffI')
+
+        self.type = mssgtype
 
         now = time.time()
         self.timestamp_s = int(now)
         self.timestamp_ns = int((now-int(now))*1e9)
 
-        if eyed and conf and x and y and d:
+        if mssgtype and eyed and conf and x and y and d:
+            self.type = 1
             self.eyed = eyed
             self.conf = conf
             self.xpos = x
             self.ypos = y
             self.dia = d
         else:
+            self.type = 1
             self.eyed = random.randint(0,1)
             self.conf = random.random()
             self.xpos = random.random()
@@ -53,7 +60,7 @@ class packing(eyedata):
     #     self.packorg = struct.Struct('QI?fffI')
 
     def encode(self, eyedata):
-        mssg = self.packorg.pack(eyedata.timestamp_s, eyedata.timestamp_ns, eyedata.eyed, eyedata.conf, eyedata.xpos, eyedata.ypos, eyedata.dia)
+        mssg = self.packorg.pack(eyedata.type, eyedata.timestamp_s, eyedata.timestamp_ns, eyedata.eyed, eyedata.conf, eyedata.xpos, eyedata.ypos, eyedata.dia)
         return mssg
 
     def decode(self, mssg):
