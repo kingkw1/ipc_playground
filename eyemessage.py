@@ -3,17 +3,6 @@ import random
 import struct
 import os
 
-class mssgvar:
-    def __init_(self, varname, varformat, randfcn):
-        self.varname = varname
-        self.varformat = varformat
-        self.genrand = randfcn
-
-class mssgstruct:
-    def __init__(self):
-        self.packorg =[]
-        self.eyed = mssgvar('eyed','?',random.randint(0,1))
-
 class eyedata():
     def __init__(self, mssgtype=None, eyed=None, conf=None, x=None, y=None, d=None):
         """

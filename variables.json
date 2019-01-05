@@ -5,6 +5,10 @@
       "varformat": "I"
     },
     {
+      "varname": "mssgsource",
+      "varformat": "I"
+    },
+    {
       "varname": "timestamp_s",
       "varformat": "I"
     },
