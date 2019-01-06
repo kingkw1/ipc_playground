@@ -49,6 +49,7 @@ if __name__ == "__main__":
     receiver = Process(target=recv_ftp)
 
     receiver.start()
+    time.sleep(0.01)
     sender.start()
 
     receiver.join()
