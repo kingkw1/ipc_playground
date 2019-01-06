@@ -10,7 +10,7 @@
     },
     {
       "varname": "timestamp_s",
-      "varformat": "I"
+      "varformat": "Q"
     },
     {
       "varname": "timestamp_ns",
