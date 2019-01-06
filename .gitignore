@@ -1,5 +1,5 @@
 .ipynb_checkpoints/
 __pycache__/
 .~lock.*
-test_datastore/
+test_data/
 archive/

@@ -71,7 +71,7 @@ class Generator(Variables):
         return headerlist + datalist
 
 class Stenographer(Variables):
-    def __init__(self, fname, fdir = 'test_datastore'):
+    def __init__(self, fname, fdir = 'test_data'):
         super(Stenographer, self).__init__()
 
         # Open the file for writing and add header
@@ -98,7 +98,7 @@ class Stenographer(Variables):
 
 class Reader(Variables):
     # TODO: implement reader
-    def __init__(self, fname, fdir = 'test_datastore'):
+    def __init__(self, fname, fdir = 'test_data'):
         super(Reader, self).__init__()
         self.file = open(os.path.join(os.getcwd(),fdir,fname),"r")
         # Gather data as list. Store as variables to self
@@ -117,8 +117,6 @@ class SendingProtocol(ABC, Variables): # should this inherit packer also?
         mssg = self.packer.pack(*data)
         return mssg
 
-    # TODO: implement "Terminate" message
-
 class ReceivingProtocol(ABC, Variables): # should this inherit packer also?
     def __init__(self):
         Variables.__init__(self)
@@ -131,51 +129,3 @@ class ReceivingProtocol(ABC, Variables): # should this inherit packer also?
     def decode(self, mssg):
         data = self.packer.unpack(mssg)
         return data
-
-class FTP(ABC):
-    def __init__(self):
-        self.server_address = ('localhost', 10000)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-class FTPSender(SendingProtocol, FTP):
-    def __init__(self):
-        FTP.__init__(self)
-        SendingProtocol.__init__(self)
-        print('\nAttempting to connect...')
-        self.sock.connect(self.server_address)
-        print('Connected!')
-
-    def send(self, data):
-        if data[0] == 0:
-            print('Terminal mssg with timestamp: ', data[self.varlist.index('timestamp_s')])
-        else:
-            print('Sending data with timestamp: ', data[self.varlist.index('timestamp_s')])
-        packed_data = self.encode(data)
-        self.sock.sendall(packed_data)
-
-    def close(self):
-        print('Ending Transmission...')
-        self.sock.close()
-
-class FTPReceiver(ReceivingProtocol, FTP):
-    def __init__(self):
-        FTP.__init__(self)
-        ReceivingProtocol.__init__(self)
-        self.sock.bind(self.server_address)
-        self.sock.listen(1)
-        print('\nAwaiting connection...')
-        self.connection, client_address = self.sock.accept()
-        print('Connected!')
-
-    def recv(self):
-        data = self.connection.recv(self.packer.size)
-        unpacked_data = self.decode(data)
-        if unpacked_data[0] == 0:
-            print('Terminal mssg with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')])
-        else:
-            print('Received data with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')])
-        return unpacked_data
-
-    def close(self):
-        print("Ending Transmission...")
-        self.connection.close()
