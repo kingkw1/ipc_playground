@@ -15,9 +15,9 @@ class FTPSender(SendingProtocol, FTP):
 
     def send(self, data):
         if data[0] == 0:
-            print('Terminal mssg with timestamp: ', data[self.varlist.index('timestamp_s')])
+            print('Terminal mssg with timestamp: ', data[self.varlist.index('timestamp_s')], ' ', data[self.varlist.index('timestamp_ns')])
         else:
-            print('Sending data with timestamp: ', data[self.varlist.index('timestamp_s')])
+            print('Sending data with timestamp: ', data[self.varlist.index('timestamp_s')], ' ', data[self.varlist.index('timestamp_ns')])
         packed_data = self.encode(data)
         self.sock.sendall(packed_data)
 
@@ -39,11 +39,12 @@ class FTPReceiver(ReceivingProtocol, FTP):
         data = self.connection.recv(self.packer.size)
         unpacked_data = self.decode(data)
         if unpacked_data[0] == 0:
-            print('Terminal mssg with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')])
+            print('Terminal mssg with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')], ' ', unpacked_data[self.varlist.index('timestamp_ns')])
         else:
-            print('Received data with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')])
+            print('Received data with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')], ' ', unpacked_data[self.varlist.index('timestamp_ns')])
         return unpacked_data
 
     def close(self):
         print("Ending Transmission...")
         self.connection.close()
+        self.sock.close()

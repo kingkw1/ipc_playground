@@ -1,7 +1,7 @@
 import time
 import random
 import os
-import csv # this is used by reader
+import pandas
 import json
 import functools
 import struct
@@ -88,7 +88,7 @@ class Stenographer(Variables):
 
         # Write the header, listing variables
         self.file.write(', '.join(self.varlist[1:])+'\n')
-        self.file.write(self.writeformat)
+        #self.file.write(self.writeformat)
 
     def write(self, data):
         # TODO: Look into buffering
@@ -97,32 +97,9 @@ class Stenographer(Variables):
     def close(self):
         self.file.close()
 
-class Reader:
-    def __init__(self, fname, fdir = 'test_data'):
-        csv.register_dialect('data_format', delimiter=',', skipinitialspace=True)
-        self.reader = csv.reader(open(os.path.join(os.getcwd(),fdir,fname),"r"), dialect='data_format')
-        self.variables = next(self.reader, None)
-        self.readformat = next(self.reader, None)
-
-    def get_var(self, varname):
-        # TODO: Get working with multiple variable names given at once
-        #varind = [self.variables.index(ivar) for ivar in varname]
-        varind = self.variables.index(varname)
-        varformat = self.readformat[varind].strip('%')
-        if varformat == 'd':
-            varfun = functools.partial(int)
-        else:
-            varfun = functools.partial(float)
-
-        content = []
-        for irow in self.reader:
-            content.append(varfun(irow[varind]))
-
-        return content
-
-    def get_data_point(ind):
-        raise NotImplementedError
-        #return data_point
+def read_data(fname, fdir = 'test_data'):
+    filepath = os.path.join(os.getcwd(),fdir,fname)
+    return pandas.read_csv(filepath, header = 0, delimiter=', ')
 
 class SendingProtocol(ABC, Variables): # should this inherit packer also?
     def __init__(self):
