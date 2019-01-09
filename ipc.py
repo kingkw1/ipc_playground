@@ -10,9 +10,6 @@ from message_regs import *
 from abc import ABC, abstractmethod
 
 """
-TODO: Use following code to monitor ram usage and timings:
-import ipython_memory_usage.ipython_memory_usage as imu
-
 TODO: Implement the message_regs
 """
 
@@ -71,6 +68,9 @@ class Generator(Variables):
         return headerlist + datalist
 
 class Stenographer(Variables):
+    """ Writes data to files.
+    """
+    # TODO: Look into a method for writing to sequential files. 10000 messages on fname01.csv, then begin writing to fname02.csvs
     def __init__(self, fname, fdir = 'test_data'):
         super(Stenographer, self).__init__()
 
@@ -98,6 +98,8 @@ class Stenographer(Variables):
         self.file.close()
 
 def read_data(fname, fdir = 'test_data'):
+    """Reads in all data to a data_frame, using pandas."""
+    # TODO: modify to select particular variables
     filepath = os.path.join(os.getcwd(),fdir,fname)
     return pandas.read_csv(filepath, header = 0, delimiter=', ')
 
