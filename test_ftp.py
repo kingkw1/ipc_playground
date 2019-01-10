@@ -2,8 +2,8 @@ import ftp
 import time
 from multiprocessing import Process
 from numpy import diff, sign
-import sys
 import unittest
+import os
 
 class FTPTestCase(unittest.TestCase):
     """Unit tests for ftp.py"""
@@ -35,9 +35,9 @@ class FTPTestCase(unittest.TestCase):
 
         print("Messages sent:  ", mssgcount)
 
-    def recv_ftp(self, fname='test_ftp.csv'):
+    def recv_ftp(self):
         receiver = ftp.FTPReceiver()
-        writer = ftp.Stenographer(fname)
+        writer = ftp.Stenographer()
 
         mssgcount = 0
         try:
@@ -59,10 +59,10 @@ class FTPTestCase(unittest.TestCase):
         """
         Checks standard use case -- running code at designated speed and checking timestamps for increment.
         """
-        filename = 'test_ftp.csv'
+        filename = '1.csv'
 
         sender = Process(target=self.send_ftp, args=(60,2))
-        receiver = Process(target=self.recv_ftp, args=(filename,))
+        receiver = Process(target=self.recv_ftp)
 
         receiver.start()
         time.sleep(0.1) # Necessary to ensure that receiver starts before sender
@@ -72,7 +72,13 @@ class FTPTestCase(unittest.TestCase):
         sender.join()
         time.sleep(self.inter_test_pause_dur)
 
-        data = ftp.read_data(filename)
+        data_dir = 'test_data'
+        fname = '0.csv'
+        data_dir_list= os.listdir(data_dir)
+        data_dir_list.sort()
+        filepath = os.path.join(os.getcwd(),data_dir,data_dir_list[0],fname)
+
+        data = ftp.read_data(filepath)
         ts = data.timestamp_s + data.timestamp_ns*(10**-9)
         self.assertTrue(all(sign(diff(ts))==1))
 
