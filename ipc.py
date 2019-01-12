@@ -10,9 +10,24 @@ import socket
 from abc import ABC, abstractmethod
 
 class Variables:
-    """Variable file structure unpacked from the json file.
+    """Variable file structure unpacked from the designated json file.
 
-    varfile -- string containing json file name including extension
+    varfile         str     json file name including extension
+
+    ------------
+    Variable file should have the following structure:
+        {
+        header:[headerdict1,headerdict2,...],
+        data: [datadict1,datadict2,...]
+        }
+    Header dicts should have the following key-value pairs:
+        varname     str     name of variable
+        varformat   str     "I" or "f" to indicate integer or float when writing to data file
+    Data dicts should have the following key-value pairs:
+        varname     str     name of variable
+        varformat   str     "I" or "f" to indicate integer or float when writing to data file
+        genrand     str     uncalled function (no parantheses). Used in generator for unit tests
+        randargin   dict    key-value pairs of the argument inputs to the function given in "genrand"
     """
     def __init__(self, varfile = 'variables.json'):
         with open(varfile, 'r') as f:
@@ -36,17 +51,25 @@ class Variables:
         self.funlist = funlist
 
 class Generator(Variables):
+    """"Generator used to make pseudo data used in unittests, as well as stop message to end termination.
+
+    sourceid    int     used as a signature for the data source. For use when multiple data sources are implemented
+    """
     def __init__(self, sourceid = 1):
         super(Generator, self).__init__()
         self.sourceid = sourceid
 
     def generate_timestamp(self):
+        """Generate a timestamp for messages using the current time.
+        """
         now = time.time()
         timestamp_s = int(now)
         timestamp_ns = int((now-int(now))*1e9)
         return timestamp_s, timestamp_ns
 
     def generate_data_message(self):
+        """Generate a pseudo data message using the given randomization functions designated by "Variables"
+        """
         # Generate header
         mssgtype = 1
         timestamp_s, timestamp_ns = self.generate_timestamp()
@@ -57,6 +80,8 @@ class Generator(Variables):
         return headerlist + datalist
 
     def generate_stop_message(self):
+        """Generate a stop message that instructs receiver to terminate transmission.
+        """
         # Generate header
         mssgtype = 0
         timestamp_s, timestamp_ns = self.generate_timestamp()
@@ -67,15 +92,23 @@ class Generator(Variables):
         return headerlist + datalist
 
 class Stenographer(Variables):
-    """ Writes data to files.
+    """ Writes data to files. Data are stored in a series of numbered files. The starting data iteration for each file is listed in an index file.
+
+    Files are stored within a timestamped directory which is in the given file directory. An index file lists
+
+    fdir        str     the directory for storing files relative to the current directory
+    file_len    int     maximum number of data points per file
     """
     def __init__(self, fdir = 'test_data', file_len = 1000):
+        """Opens up the index file and the first data file. Indicates the write format.
+        """
         super(Stenographer, self).__init__()
         self.file_len = file_len
-        self.dataiter = 0
+        self.filedataiter = 0
         self.fileiter = 0
+        self.alldataiter = 0
 
-        # Make the data folder
+        # Make the datastore folder
         if not os.path.exists(fdir):
             os.makedirs(fdir)
 
@@ -84,10 +117,14 @@ class Stenographer(Variables):
         os.makedirs(os.path.join(os.getcwd(),fdir, ts))
         self.filedir = os.path.join(os.getcwd(),fdir, ts)
 
+        # Write the index file
+        indexpath = os.path.join(self.filedir,'index.txt')
+        self.index = open(indexpath,'w')
+
         # Open the file for writing and add header
         self.newfile()
 
-        # Create the write format
+        # Create the write format to inform write command
         ## ASSUME: Anything that isn't a float is an integer
         f_ind = [index for index, value in enumerate(self.mssgformat.lower()) if value == 'f']
         writeformat = list("d"*len(self.mssgformat))
@@ -97,15 +134,21 @@ class Stenographer(Variables):
         self.writeformat = "%" + ",%".join(writeformat[1:]) + "\n" # skip message type
 
     def write(self, data):
-        # TODO: Look into buffering
+        """Adds data point to numbered data file.
+
+        data    tuple   Variables following the format designated in the variables json file
+        """
         # Check how many data points have been written
         if self.dataiter >= self.file_len:
             self.newfile()
 
         self.file.write(self.writeformat % tuple(data[1:]))
         self.dataiter += 1
+        self.alldataiter += 1
 
     def newfile(self):
+        """Creates a new data file and updates the index file.
+        """
         self.dataiter = 0
         if hasattr(self,'file'):
             self.close()
@@ -115,14 +158,28 @@ class Stenographer(Variables):
         self.file = open(filepath,'w')
         self.file.write(','.join(self.varlist[1:])+'\n')
 
+        self.index.write(str(self.alldataiter)+'\n')
+
     def close(self):
+        """Closes the current data file.
+        """
         self.file.close()
+
+    def end(self):
+        """Closes the current data file and index.
+        """
+        if hasattr(self,'file'):
+            self.close()
+
+        self.index.close()
 
 def read_data(filepath):
     """Reads in all data to a data_frame, using pandas."""
     return pandas.read_csv(filepath, header = 0, delimiter=',')
 
 class SendingProtocol(ABC, Variables): # should this inherit packer also?
+    """Defines the structure of sending protocols and provides the message encoding method.
+    """
     def __init__(self):
         Variables.__init__(self)
         self.packer = struct.Struct(self.mssgformat)
@@ -132,11 +189,17 @@ class SendingProtocol(ABC, Variables): # should this inherit packer also?
         pass
 
     def encode(self, data):
+        """Encodes a message into the message format defined by the variables json file.
+
+        data    tuple   Variables following the format designated in the variables json file
+        """
         self.packer = struct.Struct(self.mssgformat)
         mssg = self.packer.pack(*data)
         return mssg
 
 class ReceivingProtocol(ABC, Variables): # should this inherit packer also?
+    """Defines the structure of receiving protocols and provides the message unpacking method.
+    """
     def __init__(self):
         Variables.__init__(self)
         self.packer = struct.Struct(self.mssgformat)
@@ -146,5 +209,9 @@ class ReceivingProtocol(ABC, Variables): # should this inherit packer also?
         pass
 
     def decode(self, mssg):
+        """Decodes a message using the  message format defined by the variables json file.
+
+        mssg    bytes   message in the mssgformat defined by the variables json file.
+        """
         data = self.packer.unpack(mssg)
         return data

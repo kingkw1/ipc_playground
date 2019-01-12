@@ -11,7 +11,10 @@ class FTPTestCase(unittest.TestCase):
 
     def send_ftp(self, send_freq = 60, dur = 2):
         """
-        For no sleep mode, send_freq = 0
+        Generates messages and sends them through the FTP communication system.
+
+        send_freq   float/int   used to determine how long to pause in between sending messages. For no sleep mode use send_freq = 0
+        dur         float/int   duration of time to run sender before closing communication
         """
         # Initializations
         sleeptime = 1/send_freq if send_freq!=0 else 0
@@ -36,6 +39,8 @@ class FTPTestCase(unittest.TestCase):
         print("Messages sent:  ", mssgcount)
 
     def recv_ftp(self):
+        """Receives messages through the FTP communication system, and writes them to a file.
+        """
         receiver = ftp.FTPReceiver()
         writer = ftp.Stenographer()
 
@@ -52,14 +57,15 @@ class FTPTestCase(unittest.TestCase):
             pass
 
         receiver.close()
-        writer.close()
+        writer.end()
+
         print("Messages recieved:  ", mssgcount)
 
     def test_standard(self):
         """
-        Checks standard use case -- running code at designated speed and checking timestamps for increment.
+        Tests the FTP system by running the system at 60Hz and reading data from the first saved data file. Timestamps from the data are checked for incremental increase.
         """
-        filename = '1.csv'
+        filename = '0.csv'
 
         sender = Process(target=self.send_ftp, args=(60,2))
         receiver = Process(target=self.recv_ftp)
@@ -83,6 +89,8 @@ class FTPTestCase(unittest.TestCase):
         self.assertTrue(all(sign(diff(ts))==1))
 
     def test_speed(self):
+        """Tests the FTP communication system in no sleep mode to determine the maximum rate of transmission.
+        """
         sender = Process(target=self.send_ftp, args=(0,1))
         receiver = Process(target=self.recv_ftp)
 
