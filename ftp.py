@@ -15,7 +15,7 @@ class FTPSender(SendingProtocol, FTP):
         SendingProtocol.__init__(self)
         print('Attempting to connect...')
         self.sock.connect(self.server_address)
-        print('Connected!')
+        print('Sender Connected!')
 
     def send(self, data):
         """Sends given message through the socket
@@ -45,7 +45,7 @@ class FTPReceiver(ReceivingProtocol, FTP):
         self.sock.listen(1)
         print('Awaiting connection...')
         self.connection, client_address = self.sock.accept()
-        print('Connected!')
+        print('Receiver Connected!')
 
     def recv(self):
         """Receives a message from the sender and unpacks it into a tuple.
