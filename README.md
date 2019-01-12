@@ -3,8 +3,8 @@ For the MindX coding challenge, this code sets up a transmission protocol to com
 
 Code can be tested using the "test_ftp.py" file. Code should be run within a terminal in the code directory. Code was developed in a linux machine, and hasn't been tested in windows (but socket based ipc should work on windows also). 
 
-
-Core files breakdown:
+-----------------
+CORE FILES FUNCTIONALITY:
 
 BCICodeChallenge.docx
 
