@@ -6,8 +6,9 @@ import pandas
 import unittest
 import os
 
-inter_test_pause_dur = 1 # Time to close the socket between tests and avoid errors.
+inter_test_pause_dur = 1 # Time to close the socket and file between tests and avoid errors.
 sender_receiver_latency = 0.1 # Time between start of receiver and start of sender.
+
 class FTPTestCase(unittest.TestCase):
     """Unit tests for ftp.py"""
     def send_ftp(self, send_freq = 60, dur = 2):
@@ -22,7 +23,7 @@ class FTPTestCase(unittest.TestCase):
         singlemode = True if dur == 0 else False
 
         sender = ftp.FTPSender()
-        generator = ftp.Generator()
+        generator = ftp.Generator(ftp.MessageSource.TEST_PROCESS.value)
         mssgcount = 0
 
         # Main function loop
@@ -37,6 +38,7 @@ class FTPTestCase(unittest.TestCase):
                 mssgcount += 1
                 time.sleep(sleeptime)
         sender.send(generator.generate_stop_message())
+        mssgcount += 1
         sender.close()
 
         print("Messages sent:  ", mssgcount)
@@ -54,18 +56,17 @@ class FTPTestCase(unittest.TestCase):
         # Main function loop
         if singlemode:
             data = receiver.recv()
-            ts_data = ftp.Generator().generate_timestamp()
-            dt = ts_data[0]-data[2] + (ts_data[1]-data[3])*(10**-9)
+            ts_data = ftp.Generator(ftp.MessageSource.TEST_PROCESS.value).generate_timestamp()
+            dt = ts_data[0]-data[receiver.message_protocol.headerlist.index('timestamp_s')] + (ts_data[1]-data[receiver.message_protocol.headerlist.index('timestamp_ns')])*(10**-9)
             print("Message latency: ", dt)
         else:
             try:
                 while True:
                     data = receiver.recv()
-                    if data[0] == 0:
+                    writer.write(data)
+                    mssgcount += 1
+                    if data[receiver.message_protocol.headerlist.index('mssgtype')] == ftp.MessageCommand.CLOSE_COM.value:
                         break
-                    else:
-                        writer.write(data)
-                        mssgcount += 1
             except KeyboardInterrupt:
                 pass
         receiver.close()
@@ -98,7 +99,7 @@ class FTPTestCase(unittest.TestCase):
         filepath = os.path.join(os.getcwd(),data_dir,data_dir_list[0],fname)
 
         # Read newest file data and evaluate timestamps
-        data = ftp.pandas.read_csv(filepath, header = 0, delimiter=',')
+        data = pandas.read_csv(filepath, header = 0, delimiter=',')
         ts = data.timestamp_s + data.timestamp_ns*(10**-9)
         self.assertTrue(all(sign(diff(ts))==1))
 

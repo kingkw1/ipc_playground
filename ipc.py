@@ -1,5 +1,6 @@
-import time
-import datetime
+from message_regs import *
+from time import time
+from datetime import datetime
 import random
 import os
 import json
@@ -8,6 +9,12 @@ import struct
 import socket
 from abc import ABC, abstractmethod
 
+# TODO: cleaner summary of the unit test results
+# TODO: generator functions & Message protocol comment update
+# TODO: underscore variables
+# TODO: jupyter notebook documentation
+# TODO: Readme file updates
+# TODO: Scrub the challenge description
 class MessageProtocol:
     """Variable file structure unpacked from the designated json file.
 
@@ -19,24 +26,27 @@ class MessageProtocol:
         header:[headerdict1,headerdict2,...],
         data: [datadict1,datadict2,...]
         }
-    Header dicts should have the following key-value pairs:
+    Header dicts* should have the following key-value pairs:
         varname     str     name of variable
         varformat   str     "I" or "f" to indicate integer or float when writing to data file
     Data dicts should have the following key-value pairs:
         varname     str     name of variable
         varformat   str     "I" or "f" to indicate integer or float when writing to data file
-        genrand     str     uncalled function (no parantheses). Used in generator for unit tests
+        genrand     str     stored, uncalled function (no parantheses). Used in generator for unit tests
         randargin   dict    key-value pairs of the argument inputs to the function given in "genrand"
+
+    * Note: The header should have a command type, a sourceid, and a timestamp. Modifications to the header will require additional modifications to the Genearator class for unit tests.
     """
     def __init__(self, varfile = 'variables.json'):
         with open(varfile, 'r') as f:
                 all_vars = json.load(f)
 
+        headerlist = []
         varlist = []
         mssgformat = ''
         funlist = []
         for iheadvar in all_vars['headers']:
-            varlist.append(iheadvar['varname'])
+            headerlist.append(iheadvar['varname'])
             mssgformat += iheadvar['varformat']
         for idatavar in all_vars['data']:
             varlist.append(idatavar['varname'])
@@ -45,6 +55,7 @@ class MessageProtocol:
                 funlist.append(functools.partial(eval(idatavar['genrand']),**idatavar['randargin']))
             else:
                 funlist.append(eval(idatavar['genrand']))
+        self.headerlist = headerlist
         self.varlist = varlist
         self.mssgformat = mssgformat
         self.funlist = funlist
@@ -54,7 +65,7 @@ class Generator:
 
     sourceid    int     used as a signature for the data source. For use when multiple data sources are implemented
     """
-    def __init__(self, sourceid = 1):
+    def __init__(self, sourceid):
         super(Generator, self).__init__()
         self.sourceid = sourceid
         self.message_protocol = MessageProtocol()
@@ -62,34 +73,43 @@ class Generator:
     def generate_timestamp(self):
         """Generate a timestamp for messages using the current time.
         """
-        now = time.time()
+        now = time()
         timestamp_s = int(now)
         timestamp_ns = int((now-int(now))*1e9)
         return timestamp_s, timestamp_ns
+
+    def generate_header(self, mssgtype):
+        """Generates a header using the format specified in MessageProtocol.
+        """
+        timestamp_s, timestamp_ns = self.generate_timestamp()
+        header = [0]*len(self.message_protocol.headerlist)
+        header[self.message_protocol.headerlist.index('timestamp_s')] = timestamp_s
+        header[self.message_protocol.headerlist.index('timestamp_ns')] = timestamp_ns
+        header[self.message_protocol.headerlist.index('mssgtype')] = mssgtype
+        header[self.message_protocol.headerlist.index('mssgsource')] = self.sourceid
+        return header
 
     def generate_data_message(self):
         """Generate a pseudo data message using the given randomization functions designated by "MessageProtocol"
         """
         # Generate header
-        mssgtype = 1
-        timestamp_s, timestamp_ns = self.generate_timestamp()
-        headerlist = [mssgtype, self.sourceid, timestamp_s, timestamp_ns]
+        mssgtype = MessageCommand.XMIT_DATA.value
+        header = self.generate_header(mssgtype)
 
         # Generate vals from funlist
-        datalist = [f() for f in self.message_protocol.funlist]
-        return headerlist + datalist
+        data = [f() for f in self.message_protocol.funlist]
+        return header + data
 
     def generate_stop_message(self):
         """Generate a stop message that instructs receiver to terminate transmission.
         """
         # Generate header
-        mssgtype = 0
-        timestamp_s, timestamp_ns = self.generate_timestamp()
-        headerlist = [mssgtype, self.sourceid, timestamp_s, timestamp_ns]
+        mssgtype = MessageCommand.CLOSE_COM.value
+        header = self.generate_header(mssgtype)
 
         # Generate vals from funlist
-        datalist = [0 for f in self.message_protocol.funlist]
-        return headerlist + datalist
+        data = [0 for f in self.message_protocol.funlist]
+        return header + data
 
 class Stenographer:
     """ Writes data to files. Data are stored in a series of numbered files. The starting data iteration for each file is listed in an index file.
@@ -114,7 +134,7 @@ class Stenographer:
             os.makedirs(fdir)
 
         # Make the session data folder
-        ts = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d_%H%M%S')
+        ts = datetime.fromtimestamp(time()).strftime('%Y%m%d_%H%M%S')
         os.makedirs(os.path.join(os.getcwd(),fdir, ts))
         self.filedir = os.path.join(os.getcwd(),fdir, ts)
 
@@ -132,7 +152,7 @@ class Stenographer:
         for ind in f_ind:
             writeformat[ind] = "f"
 
-        self.writeformat = "%" + ",%".join(writeformat[1:]) + "\n" # skip message type
+        self.writeformat = "%" + ",%".join(writeformat) + "\n" # skip message type
 
     def write(self, data):
         """Adds data point to numbered data file.
@@ -143,7 +163,7 @@ class Stenographer:
         if self.dataiter >= self.file_len:
             self.newfile()
 
-        self.file.write(self.writeformat % tuple(data[1:]))
+        self.file.write(self.writeformat % tuple(data))
         self.dataiter += 1
         self.alldataiter += 1
 
@@ -157,8 +177,7 @@ class Stenographer:
 
         filepath = os.path.join(self.filedir,str(self.fileiter)+'.csv')
         self.file = open(filepath,'w')
-        self.file.write(','.join(self.message_protocol.varlist[1:])+'\n')
-
+        self.file.write(','.join(self.message_protocol.headerlist + self.message_protocol.varlist)+'\n')
         self.index.write(str(self.alldataiter)+'\n')
 
     def close(self):
