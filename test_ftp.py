@@ -8,6 +8,7 @@ import os
 
 inter_test_pause_dur = 1 # Time to close the socket and file between tests and avoid errors.
 sender_receiver_latency = 0.1 # Time between start of receiver and start of sender.
+testfname = "ftptestresults.temp"
 
 class FTPTestCase(unittest.TestCase):
     """Unit tests for ftp.py"""
@@ -42,6 +43,11 @@ class FTPTestCase(unittest.TestCase):
         sender.close()
 
         print("Messages sent:  ", mssgcount)
+        if send_freq == 0 and dur == 1:
+            with open(testfname, "a+") as temp_file:
+                throughput = mssgcount/dur
+                temp_file.write("Max Throughput: \t%d\t\t(mssg/sec) \n" % throughput)
+                print("Max Throughput: \t", throughput, "\t\t(mssg/sec) \n")
 
     def recv_ftp(self, singlemode = False):
         """Receives messages through the FTP communication system, and writes them to a file.
@@ -57,8 +63,10 @@ class FTPTestCase(unittest.TestCase):
         if singlemode:
             data = receiver.recv()
             ts_data = ftp.Generator(ftp.MessageSource.TEST_PROCESS.value).generate_timestamp()
-            dt = ts_data[0]-data[receiver.message_protocol.headerlist.index('timestamp_s')] + (ts_data[1]-data[receiver.message_protocol.headerlist.index('timestamp_ns')])*(10**-9)
-            print("Message latency: ", dt)
+            dt = ts_data[0]-data[receiver.message_protocol.headerlist.index('timestamp_s')] + (ts_data[1]-data[receiver.message_protocol.headerlist.index('timestamp_ns')])*(10**-9)*1000
+            print("Message latency: \t", dt,"\t(ms)")
+            with open(testfname, "a+") as temp_file:
+                temp_file.write("Latency: \t\t%f\t(ms) \n" % dt)
         else:
             try:
                 while True:
@@ -139,8 +147,28 @@ class FTPTestCase(unittest.TestCase):
         # Wait until processes complete and join together to primary thread
         receiver.join()
         sender.join()
-
         time.sleep(inter_test_pause_dur)
+
+    @classmethod
+    def setUpClass(cls):
+        """Deletes the temporary file used to store test results, if one somehow was left over.
+        """
+        if os.path.exists(testfname):
+            os.remove(testfname)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Prints out the test results stored in the temporary file and then deletes the file.
+        """
+        print()
+        print('---------------------------------------------------------------------')
+        print('UNIT TEST SUMMARY:')
+        print()
+        print()
+        with open(testfname, 'r') as fin:
+            print(fin.read())
+        if os.path.exists(testfname):
+            os.remove(testfname)
 
 if __name__ == "__main__":
     unittest.main()

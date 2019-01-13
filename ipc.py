@@ -9,7 +9,6 @@ import struct
 import socket
 from abc import ABC, abstractmethod
 
-# TODO: cleaner summary of the unit test results
 # TODO: generator functions & Message protocol comment update
 # TODO: underscore variables
 # TODO: jupyter notebook documentation
