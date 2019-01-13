@@ -2,7 +2,6 @@ import time
 import datetime
 import random
 import os
-import pandas
 import json
 import functools
 import struct
@@ -174,10 +173,6 @@ class Stenographer:
             self.close()
 
         self.index.close()
-
-def read_data(filepath):
-    """Reads in all data to a data_frame, using pandas."""
-    return pandas.read_csv(filepath, header = 0, delimiter=',')
 
 class SendingProtocol(ABC):
     """Defines the structure of sending protocols and provides the message encoding method.

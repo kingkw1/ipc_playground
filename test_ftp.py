@@ -2,6 +2,7 @@ import ftp
 import time
 from multiprocessing import Process
 from numpy import diff, sign
+import pandas
 import unittest
 import os
 
@@ -97,7 +98,7 @@ class FTPTestCase(unittest.TestCase):
         filepath = os.path.join(os.getcwd(),data_dir,data_dir_list[0],fname)
 
         # Read newest file data and evaluate timestamps
-        data = ftp.read_data(filepath)
+        data = ftp.pandas.read_csv(filepath, header = 0, delimiter=',')
         ts = data.timestamp_s + data.timestamp_ns*(10**-9)
         self.assertTrue(all(sign(diff(ts))==1))
 
