@@ -1,4 +1,5 @@
-from ipc import *
+from ipc import SendingProtocol, ReceivingProtocol, socket
+from abc import ABC, abstractmethod
 
 class FTP(ABC):
     """Designates the server address and socket properties needed for FTP.

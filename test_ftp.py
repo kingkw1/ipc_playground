@@ -1,4 +1,6 @@
-import ftp
+from ftp import FTPSender, FTPReceiver
+from ipc import Generator, Stenographer
+from message_regs import MessageSource, MessageCommand
 import time
 from multiprocessing import Process
 from numpy import diff, sign
@@ -23,8 +25,8 @@ class FTPTestCase(unittest.TestCase):
         sleeptime = 1/send_freq if send_freq!=0 else 0
         singlemode = True if dur == 0 else False
 
-        sender = ftp.FTPSender()
-        generator = ftp.Generator(ftp.MessageSource.TEST_PROCESS.value)
+        sender = FTPSender()
+        generator = Generator(MessageSource.TEST_PROCESS.value)
         mssgcount = 0
 
         # Main function loop
@@ -55,14 +57,14 @@ class FTPTestCase(unittest.TestCase):
         singlemode  Bool    Receives a single message and calculates the transmission latency. Sender should also be set to singlemode.
         """
         # Initializations
-        receiver = ftp.FTPReceiver()
-        writer = ftp.Stenographer()
+        receiver = FTPReceiver()
+        writer = Stenographer()
         mssgcount = 0
 
         # Main function loop
         if singlemode:
             data = receiver.recv()
-            ts_data = ftp.Generator(ftp.MessageSource.TEST_PROCESS.value).generate_timestamp()
+            ts_data = Generator(MessageSource.TEST_PROCESS.value).generate_timestamp()
             dt = ts_data[0]-data[receiver.message_protocol.headerlist.index('timestamp_s')] + (ts_data[1]-data[receiver.message_protocol.headerlist.index('timestamp_ns')])*(10**-9)*1000
             print("Message latency: \t", dt,"\t(ms)")
             with open(testfname, "a+") as temp_file:
@@ -73,7 +75,7 @@ class FTPTestCase(unittest.TestCase):
                     data = receiver.recv()
                     writer.write(data)
                     mssgcount += 1
-                    if data[receiver.message_protocol.headerlist.index('mssgtype')] == ftp.MessageCommand.CLOSE_COM.value:
+                    if data[receiver.message_protocol.headerlist.index('mssgtype')] == MessageCommand.CLOSE_COM.value:
                         break
             except KeyboardInterrupt:
                 pass

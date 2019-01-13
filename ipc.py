@@ -1,4 +1,4 @@
-from message_regs import *
+from message_regs import MessageCommand
 from time import time
 from datetime import datetime
 import random
@@ -9,6 +9,9 @@ import struct
 import socket
 from abc import ABC, abstractmethod
 
+# TODO: FTP closing message is shared in the sender and Receiver
+# TODO: FTP.close --- place in parent and extend for the Receiver
+# TODO: super with multiple inheritance
 # TODO: generator functions & Message protocol comment update
 # TODO: underscore variables
 # TODO: jupyter notebook documentation
