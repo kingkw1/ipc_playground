@@ -9,7 +9,7 @@ import struct
 import socket
 from abc import ABC, abstractmethod
 
-class Variables:
+class MessageProtocol:
     """Variable file structure unpacked from the designated json file.
 
     varfile         str     json file name including extension
@@ -50,7 +50,7 @@ class Variables:
         self.mssgformat = mssgformat
         self.funlist = funlist
 
-class Generator(Variables):
+class Generator:
     """"Generator used to make pseudo data used in unittests, as well as stop message to end termination.
 
     sourceid    int     used as a signature for the data source. For use when multiple data sources are implemented
@@ -58,6 +58,7 @@ class Generator(Variables):
     def __init__(self, sourceid = 1):
         super(Generator, self).__init__()
         self.sourceid = sourceid
+        self.message_protocol = MessageProtocol()
 
     def generate_timestamp(self):
         """Generate a timestamp for messages using the current time.
@@ -68,7 +69,7 @@ class Generator(Variables):
         return timestamp_s, timestamp_ns
 
     def generate_data_message(self):
-        """Generate a pseudo data message using the given randomization functions designated by "Variables"
+        """Generate a pseudo data message using the given randomization functions designated by "MessageProtocol"
         """
         # Generate header
         mssgtype = 1
@@ -76,7 +77,7 @@ class Generator(Variables):
         headerlist = [mssgtype, self.sourceid, timestamp_s, timestamp_ns]
 
         # Generate vals from funlist
-        datalist = [f() for f in self.funlist]
+        datalist = [f() for f in self.message_protocol.funlist]
         return headerlist + datalist
 
     def generate_stop_message(self):
@@ -88,10 +89,10 @@ class Generator(Variables):
         headerlist = [mssgtype, self.sourceid, timestamp_s, timestamp_ns]
 
         # Generate vals from funlist
-        datalist = [0 for f in self.funlist]
+        datalist = [0 for f in self.message_protocol.funlist]
         return headerlist + datalist
 
-class Stenographer(Variables):
+class Stenographer:
     """ Writes data to files. Data are stored in a series of numbered files. The starting data iteration for each file is listed in an index file.
 
     Files are stored within a timestamped directory which is in the given file directory. An index file lists
@@ -107,6 +108,7 @@ class Stenographer(Variables):
         self.filedataiter = 0
         self.fileiter = 0
         self.alldataiter = 0
+        self.message_protocol = MessageProtocol()
 
         # Make the datastore folder
         if not os.path.exists(fdir):
@@ -126,8 +128,8 @@ class Stenographer(Variables):
 
         # Create the write format to inform write command
         ## ASSUME: Anything that isn't a float is an integer
-        f_ind = [index for index, value in enumerate(self.mssgformat.lower()) if value == 'f']
-        writeformat = list("d"*len(self.mssgformat))
+        f_ind = [index for index, value in enumerate(self.message_protocol.mssgformat.lower()) if value == 'f']
+        writeformat = list("d"*len(self.message_protocol.mssgformat))
         for ind in f_ind:
             writeformat[ind] = "f"
 
@@ -136,7 +138,7 @@ class Stenographer(Variables):
     def write(self, data):
         """Adds data point to numbered data file.
 
-        data    tuple   Variables following the format designated in the variables json file
+        data    tuple   MessageProtocol following the format designated in the variables json file
         """
         # Check how many data points have been written
         if self.dataiter >= self.file_len:
@@ -156,7 +158,7 @@ class Stenographer(Variables):
 
         filepath = os.path.join(self.filedir,str(self.fileiter)+'.csv')
         self.file = open(filepath,'w')
-        self.file.write(','.join(self.varlist[1:])+'\n')
+        self.file.write(','.join(self.message_protocol.varlist[1:])+'\n')
 
         self.index.write(str(self.alldataiter)+'\n')
 
@@ -177,12 +179,12 @@ def read_data(filepath):
     """Reads in all data to a data_frame, using pandas."""
     return pandas.read_csv(filepath, header = 0, delimiter=',')
 
-class SendingProtocol(ABC, Variables): # should this inherit packer also?
+class SendingProtocol(ABC):
     """Defines the structure of sending protocols and provides the message encoding method.
     """
     def __init__(self):
-        Variables.__init__(self)
-        self.packer = struct.Struct(self.mssgformat)
+        self.message_protocol = MessageProtocol()
+        self.packer = struct.Struct(self.message_protocol.mssgformat)
 
     @abstractmethod
     def send(self):
@@ -191,18 +193,18 @@ class SendingProtocol(ABC, Variables): # should this inherit packer also?
     def encode(self, data):
         """Encodes a message into the message format defined by the variables json file.
 
-        data    tuple   Variables following the format designated in the variables json file
+        data    tuple   MessageProtocol following the format designated in the variables json file
         """
-        self.packer = struct.Struct(self.mssgformat)
+        self.packer = struct.Struct(self.message_protocol.mssgformat)
         mssg = self.packer.pack(*data)
         return mssg
 
-class ReceivingProtocol(ABC, Variables): # should this inherit packer also?
+class ReceivingProtocol(ABC): # should this inherit packer also?
     """Defines the structure of receiving protocols and provides the message unpacking method.
     """
     def __init__(self):
-        Variables.__init__(self)
-        self.packer = struct.Struct(self.mssgformat)
+        self.message_protocol = MessageProtocol()
+        self.packer = struct.Struct(self.message_protocol.mssgformat)
 
     @abstractmethod
     def recv(self):

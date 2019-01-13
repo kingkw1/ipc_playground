@@ -20,12 +20,12 @@ class FTPSender(SendingProtocol, FTP):
     def send(self, data):
         """Sends given message through the socket
 
-        data    tuple   Variables following the format designated in the variables json file
+        data    tuple   MessageProtocol following the format designated in the variables json file
         """
         if data[0] == 0:
-            print('Terminal mssg with timestamp: ', data[self.varlist.index('timestamp_s')], ' ', data[self.varlist.index('timestamp_ns')])
+            print('Terminal mssg with timestamp: ', data[self.message_protocol.varlist.index('timestamp_s')], ' ', data[self.message_protocol.varlist.index('timestamp_ns')])
         else:
-            print('Sending data with timestamp: ', data[self.varlist.index('timestamp_s')], ' ', data[self.varlist.index('timestamp_ns')])
+            print('Sending data with timestamp: ', data[self.message_protocol.varlist.index('timestamp_s')], ' ', data[self.message_protocol.varlist.index('timestamp_ns')])
         packed_data = self.encode(data)
         self.sock.sendall(packed_data)
 
@@ -53,9 +53,9 @@ class FTPReceiver(ReceivingProtocol, FTP):
         data = self.connection.recv(self.packer.size)
         unpacked_data = self.decode(data)
         if unpacked_data[0] == 0:
-            print('Terminal mssg with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')], ' ', unpacked_data[self.varlist.index('timestamp_ns')])
+            print('Terminal mssg with timestamp: ', unpacked_data[self.message_protocol.varlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.varlist.index('timestamp_ns')])
         else:
-            print('Received data with timestamp: ', unpacked_data[self.varlist.index('timestamp_s')], ' ', unpacked_data[self.varlist.index('timestamp_ns')])
+            print('Received data with timestamp: ', unpacked_data[self.message_protocol.varlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.varlist.index('timestamp_ns')])
         return unpacked_data
 
     def close(self):

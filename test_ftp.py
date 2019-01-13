@@ -104,7 +104,7 @@ class FTPTestCase(unittest.TestCase):
         # Pause to ensure sockets and files closed successfully
         time.sleep(inter_test_pause_dur)
 
-    def test_speed(self):
+    def test_throughput(self):
         """Tests the FTP communication system in no sleep mode to determine the maximum rate of transmission.
         """
         sender = Process(target=self.send_ftp, args=(0,1,))
