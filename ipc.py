@@ -9,9 +9,6 @@ import struct
 import socket
 from abc import ABC, abstractmethod
 
-# TODO: FTP closing message is shared in the sender and Receiver
-# TODO: FTP.close --- place in parent and extend for the Receiver
-# TODO: super with multiple inheritance
 # TODO: generator functions & Message protocol comment update
 # TODO: underscore variables
 # TODO: jupyter notebook documentation
@@ -199,6 +196,7 @@ class SendingProtocol(ABC):
     """Defines the structure of sending protocols and provides the message encoding method.
     """
     def __init__(self):
+        super(SendingProtocol, self).__init__()
         self.message_protocol = MessageProtocol()
         self.packer = struct.Struct(self.message_protocol.mssgformat)
 
@@ -219,6 +217,7 @@ class ReceivingProtocol(ABC): # should this inherit packer also?
     """Defines the structure of receiving protocols and provides the message unpacking method.
     """
     def __init__(self):
+        super(ReceivingProtocol, self).__init__()
         self.message_protocol = MessageProtocol()
         self.packer = struct.Struct(self.message_protocol.mssgformat)
 

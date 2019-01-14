@@ -1,19 +1,31 @@
-from ipc import SendingProtocol, ReceivingProtocol, socket
+from ipc import MessageProtocol, SendingProtocol, ReceivingProtocol, socket
 from abc import ABC, abstractmethod
 
 class FTP(ABC):
     """Designates the server address and socket properties needed for FTP.
     """
     def __init__(self):
+        super(FTP, self).__init__()
         self.server_address = ('localhost', 10000)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.message_protocol = MessageProtocol()
+
+    def closing_message(self, data):
+        """Indicates communication termination.
+        """
+        print('Closing mssg with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
+
+    def close(self):
+        """Closes the transmission socket.
+        """
+        print("Ending Transmission...")
+        self.sock.close()
 
 class FTPSender(SendingProtocol, FTP):
     """Establishes the sending end of the FTP communication.
     """
     def __init__(self):
-        FTP.__init__(self)
-        SendingProtocol.__init__(self)
+        super(FTPSender, self).__init__()
         print('Attempting to connect...')
         self.sock.connect(self.server_address)
         print('Sender Connected!')
@@ -23,25 +35,18 @@ class FTPSender(SendingProtocol, FTP):
 
         data    tuple   MessageProtocol following the format designated in the variables json file
         """
-        if data[0] == 0:
-            print('Terminal mssg with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
+        if data[self.message_protocol.headerlist.index('mssgtype')] == 0:
+            self.closing_message(data)
         else:
             print('Sending data with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
         packed_data = self.encode(data)
         self.sock.sendall(packed_data)
 
-    def close(self):
-        """Closes the communication on the senders end.
-        """
-        print('Ending Transmission...')
-        self.sock.close()
-
 class FTPReceiver(ReceivingProtocol, FTP):
     """Establishes the receiving end of the FTP communications.
     """
     def __init__(self):
-        FTP.__init__(self)
-        ReceivingProtocol.__init__(self)
+        super(FTPReceiver, self).__init__()
         self.sock.bind(self.server_address)
         self.sock.listen(1)
         print('Awaiting connection...')
@@ -53,15 +58,14 @@ class FTPReceiver(ReceivingProtocol, FTP):
         """
         data = self.connection.recv(self.packer.size)
         unpacked_data = self.decode(data)
-        if unpacked_data[0] == 0:
-            print('Terminal mssg with timestamp: ', unpacked_data[self.message_protocol.headerlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.headerlist.index('timestamp_ns')])
+        if unpacked_data[self.message_protocol.headerlist.index('mssgtype')] == 0:
+            self.closing_message(unpacked_data)
         else:
             print('Received data with timestamp: ', unpacked_data[self.message_protocol.headerlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.headerlist.index('timestamp_ns')])
         return unpacked_data
 
     def close(self):
-        """Closes the communication on the receiver end.
+        """Closes the connection.
         """
-        print("Ending Transmission...")
+        super(FTPReceiver, self).close()
         self.connection.close()
-        self.sock.close()
