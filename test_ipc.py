@@ -1,4 +1,4 @@
-from named_pipes import TransferProtocol
+from TransferProtocols.named_pipes import TransferProtocol
 import time
 from multiprocessing import Process
 from numpy import diff, sign

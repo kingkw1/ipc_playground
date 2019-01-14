@@ -7,6 +7,7 @@ setup(
     url='https://github.com/kingkw1/mindx_ipc',
     author='Kevin King',
     license='MIT',
+    packages='TransferProtocols',
     install_requires=['pandas',
                       'numpy'],
 )
