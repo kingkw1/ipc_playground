@@ -5,3 +5,5 @@ test_data/
 archive/
 *.temp
 BCICodeChallenge.docx
+mindx_ipc.egg-info/
+setup.py
