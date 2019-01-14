@@ -1,9 +1,14 @@
 # mindx_ipc
 For the MindX coding challenge, this code is used to communicates messages between 2 processes running on the same pc.
 
-[COREFUNCTIONALITY](#corefunctionality)
+In addition to a interprocess communication protocol, this code also includes a message protocol, random data generator, a data file storing system, and unit tests that can be used to evalute the system.
+
+### Table of Contents
+1. [File-Description](#file-description)
+2. [How to Run](#how-to-run)
+3. [Solution and Rationale](#solution-and-rationale)
 ---
-### COREFUNCTIONALITY:
+### File-Description:
 
 * [__ipc.py__](ipc.py)
 	* Discerns the message protocol. 
@@ -24,11 +29,12 @@ For the MindX coding challenge, this code is used to communicates messages betwe
 ### How to Run
 To demonstrate functionality, code can be run in one of two ways:
 * Run sender and receiver in separate terminal windows
-	1. test_ftp.recv_ftp()
-	2. test_ftp.send_ftp()
+	1. test_ftp.FTPTestCase().recv_ftp()
+	2. test_ftp.FTPTestCase().send_ftp()
 	* Note: Always run recv_ftp() first, as the sender will not wait for the receiver to join connection.
-* Run unit test file in aterminal window
-	1. test_ftp
-	* Note: This option does not work in a Windows machine due to a [documented issue](https://github.com/Axelrod-Python/Axelrod/issues/718) in parallel processing
-	
-Code can be tested using the "test_ftp.py" file. Code should be run within a terminal in the mindx_ipc directory. Code was developed and tested on on a linux machine. On a windows machine, unittests must be run individually in order to 
+* Run standard case unit test file in a terminal window
+	1. test_ftp.FTPTestCase.test_standard()
+	* Note: This option does not work in a Windows machine due to a [documented issue](https://github.com/Axelrod-Python/Axelrod/issues/718) in parallel processing.
+
+### Solution and Rationale
+
