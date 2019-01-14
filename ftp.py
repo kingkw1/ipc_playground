@@ -16,7 +16,7 @@ class FTP(ABC):
         print('Closing mssg with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
 
     def close(self):
-        """Closes the transmission socket.
+        """Closes the FTP transmission socket.
         """
         print("Ending Transmission...")
         self.sock.close()
@@ -65,7 +65,7 @@ class FTPReceiver(ReceivingProtocol, FTP):
         return unpacked_data
 
     def close(self):
-        """Closes the connection.
+        """Closes the FTP connection.
         """
         super(FTPReceiver, self).close()
         self.connection.close()

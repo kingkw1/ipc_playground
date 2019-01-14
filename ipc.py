@@ -9,11 +9,6 @@ import struct
 import socket
 from abc import ABC, abstractmethod
 
-# TODO: generator functions & Message protocol comment update
-# TODO: underscore variables
-# TODO: Readme file updates
-# TODO: jupyter notebook documentation
-# TODO: Scrub the challenge description
 class MessageProtocol:
     """Variable file structure unpacked from the designated json file.
 
@@ -54,6 +49,7 @@ class MessageProtocol:
                 funlist.append(functools.partial(eval(idatavar['genrand']),**idatavar['randargin']))
             else:
                 funlist.append(eval(idatavar['genrand']))
+
         self.headerlist = headerlist
         self.varlist = varlist
         self.mssgformat = mssgformat
@@ -95,7 +91,7 @@ class Generator:
         mssgtype = MessageCommand.XMIT_DATA.value
         header = self.generate_header(mssgtype)
 
-        # Generate vals from funlist
+        # Generate data values from funlist
         data = [f() for f in self.message_protocol.funlist]
         return header + data
 
@@ -106,7 +102,7 @@ class Generator:
         mssgtype = MessageCommand.CLOSE_COM.value
         header = self.generate_header(mssgtype)
 
-        # Generate vals from funlist
+        # Use 0s for variables
         data = [0 for f in self.message_protocol.funlist]
         return header + data
 
@@ -136,21 +132,21 @@ class Stenographer:
         os.makedirs(os.path.join(os.getcwd(),fdir, ts))
         self.filedir = os.path.join(os.getcwd(),fdir, ts)
 
-        # Write the index file
+        # Make the index file
         indexpath = os.path.join(self.filedir,'index.txt')
         self.index = open(indexpath,'w')
 
-        # Open the file for writing and add header
+        # Open a new file for writing
         self.newfile()
 
         # Create the write format to inform write command
-        ## ASSUME: Anything that isn't a float is an integer
+        ## ASSUME: Anything that isn't a float is an integer. No strings allowed
         f_ind = [index for index, value in enumerate(self.message_protocol.mssgformat.lower()) if value == 'f']
         writeformat = list("d"*len(self.message_protocol.mssgformat))
         for ind in f_ind:
             writeformat[ind] = "f"
 
-        self.writeformat = "%" + ",%".join(writeformat) + "\n" # skip message type
+        self.writeformat = "%" + ",%".join(writeformat) + "\n"
 
     def write(self, data):
         """Adds data point to numbered data file.
@@ -158,24 +154,28 @@ class Stenographer:
         data    tuple   MessageProtocol following the format designated in the variables json file
         """
         # Check how many data points have been written
-        if self.__dataiter >= self.file_len:
+        if self.__filedataiter >= self.file_len:
             self.newfile()
 
         self.file.write(self.writeformat % tuple(data))
-        self.__dataiter += 1
+        self.__filedataiter += 1
         self.__alldataiter += 1
 
     def newfile(self):
         """Creates a new data file and updates the index file.
         """
-        self.__dataiter = 0
+        # Reset current file data iteration and increment the file iteration
+        self.__filedataiter = 0
         if hasattr(self,'file'):
             self.close()
             self.__fileiter += 1
 
+        # Create the new file
         filepath = os.path.join(self.filedir,str(self.__fileiter)+'.csv')
         self.file = open(filepath,'w')
         self.file.write(','.join(self.message_protocol.headerlist + self.message_protocol.varlist)+'\n')
+
+        # Update the index file
         self.index.write(str(self.__alldataiter)+'\n')
 
     def close(self):
@@ -213,7 +213,7 @@ class SendingProtocol(ABC):
         return mssg
 
 class ReceivingProtocol(ABC): # should this inherit packer also?
-    """Defines the structure of receiving protocols and provides the message unpacking method.
+    """Defines the structure of receiving protocols and provides the message decoding method.
     """
     def __init__(self):
         super(ReceivingProtocol, self).__init__()

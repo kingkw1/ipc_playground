@@ -21,15 +21,16 @@ class FTPTestCase(unittest.TestCase):
         send_freq   float/int   used to determine how long to pause in between sending messages. For no sleep mode use send_freq = 0
         dur         float/int   duration of time to run sender before closing communication. For singlemode (send 1 message) use dur = 0.
         """
-        # Initializations
+        # Interpret the inputs
         sleeptime = 1/send_freq if send_freq!=0 else 0
         singlemode = True if dur == 0 else False
 
+        # Initializations
         sender = FTPSender()
         generator = Generator(MessageSource.TEST_PROCESS.value)
         mssgcount = 0
 
-        # Main function loop
+        # Main functionality
         if singlemode:
             data = generator.generate_data_message()
             sender.send(data)
@@ -61,7 +62,7 @@ class FTPTestCase(unittest.TestCase):
         writer = Stenographer()
         mssgcount = 0
 
-        # Main function loop
+        # Main functionality
         if singlemode:
             data = receiver.recv()
             ts_data = Generator(MessageSource.TEST_PROCESS.value).generate_timestamp()
@@ -79,6 +80,7 @@ class FTPTestCase(unittest.TestCase):
                         break
             except KeyboardInterrupt:
                 pass
+
         receiver.close()
         writer.end()
 
@@ -117,7 +119,7 @@ class FTPTestCase(unittest.TestCase):
         time.sleep(_inter_test_pause_dur)
 
     def test_throughput(self):
-        """Tests the FTP communication system in no sleep mode to determine the maximum rate of transmission.
+        """Tests the FTP communication system in no sleep mode for 1 second to determine the maximum rate of transmission.
         """
         sender = Process(target=self.send_ftp, args=(0,1,))
         receiver = Process(target=self.recv_ftp)
@@ -167,6 +169,7 @@ class FTPTestCase(unittest.TestCase):
         print('UNIT TEST SUMMARY:')
         print()
         print()
+
         with open(_testfname, 'r') as fin:
             print(fin.read())
         if os.path.exists(_testfname):
