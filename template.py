@@ -1,20 +1,18 @@
 import ipc
 from message_regs import MessageSource, MessageCommand
 import time
-import os
+# IMPORT ALL THE REST OF THE THINGS
 
-"""Methods used for inter-process communications using Named Pipes.
+"""Template for inter-process communications.
 """
 
-_pipename = 'fifo'
-
 class SendingProtocol(ipc.SendingProtocol):
-    """Establishes the sending end of the Named Pipe interprocess communication.
+    """Establishes the sending end of the IPC communication.
     """
     def __init__(self):
         super(SendingProtocol, self).__init__()
         print('Attempting to connect...')
-        self.pipe = os.fdopen(os.open(_pipename, os.O_NONBLOCK|os.O_WRONLY), 'wb', buffering=0, closefd=False)
+        # Connect
         print('Sender Connected!')
 
     def send(self, data):
@@ -22,12 +20,12 @@ class SendingProtocol(ipc.SendingProtocol):
 
         data    tuple   MessageProtocol following the format designated in the variables json file
         """
-        if data[self.message_protocol.headerlist.index('mssgtype')] == 0:
+        if data[self.message_protocol.headerlist.index('mssgtype')] ==  MessageCommand.CLOSE_COM.value:
             self.closing_message(data)
         else:
             print('Sending data with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
         packed_data = self.encode(data)
-        self.pipe.write(packed_data)
+        # Send
 
     def closing_message(self, data):
         """Indicates communication termination.
@@ -35,23 +33,20 @@ class SendingProtocol(ipc.SendingProtocol):
         print('Sending TERMINATION message with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
 
 class ReceivingProtocol(ipc.ReceivingProtocol):
-    """Establishes the receiving end of the Named Pipe interprocess communications.
+    """Establishes the receiving end of the IPC communication.
     """
     def __init__(self):
         super(ReceivingProtocol, self).__init__()
 
-        if os.path.exists(_pipename):
-            os.remove(_pipename)
-        os.mkfifo(_pipename)
-
+        # Setup
         print('Awaiting connection...')
-        self.pipe = os.fdopen(os.open(_pipename, os.O_NONBLOCK|os.O_RDONLY), 'rb', buffering=0)
+        # Connect
         print('Receiver Connected!')
 
     def recv(self):
         """Receives a message from the sender and unpacks it into a tuple.
         """
-        data = self.pipe.read(self.packer.size)
+        # Receive Data
         unpacked_data = self.decode(data)
         if unpacked_data[self.message_protocol.headerlist.index('mssgtype')] == 0:
             self.closing_message(unpacked_data)
@@ -59,17 +54,13 @@ class ReceivingProtocol(ipc.ReceivingProtocol):
             print('Received data with timestamp: ', unpacked_data[self.message_protocol.headerlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.headerlist.index('timestamp_ns')])
         return unpacked_data
 
-    def close(self):
-        self.pipe.close()
-        os.remove(_pipename)
-
     def closing_message(self, data):
         """Indicates communication termination.
         """
         print('Received TERMINATION message with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
 
 class TransferProtocol(ipc.TransferProtocol):
-    """Protocol for transferring messages using named_pipes.
+    """Protocol for transferring messages using IPC.
     """
     def __init__(self):
             super(TransferProtocol, self).__init__()

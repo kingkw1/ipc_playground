@@ -60,7 +60,7 @@ class ReceivingProtocol(ipc.ReceivingProtocol):
         """
         data = self.connection.recv(self.packer.size)
         unpacked_data = self.decode(data)
-        if unpacked_data[self.message_protocol.headerlist.index('mssgtype')] == 0:
+        if unpacked_data[self.message_protocol.headerlist.index('mssgtype')] == MessageCommand.CLOSE_COM.value:
             self.closing_message(unpacked_data)
         else:
             print('Received data with timestamp: ', unpacked_data[self.message_protocol.headerlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.headerlist.index('timestamp_ns')])
@@ -150,6 +150,10 @@ class TransferProtocol(ipc.TransferProtocol):
                     while True:
                         data = receiver.recv()
                         writer.write(data)
+
+                        if test_mode == 'throughput' and mssgcount == 0:
+                            first_data_pt = data
+
                         mssgcount += 1
                         if data[receiver.message_protocol.headerlist.index('mssgtype')] == MessageCommand.CLOSE_COM.value:
                             break
@@ -160,10 +164,14 @@ class TransferProtocol(ipc.TransferProtocol):
             writer.end()
 
         if test_mode == 'throughput':
-            ## ASSUME: Throughput involves a test duration of 1 second.
-            print("Maximum Throughput: \t", mssgcount, "\t\t(mssg/sec) \n")
+            ts_data = ipc.Generator(MessageSource.TEST_PROCESS.value).generate_timestamp()
+            dur = ts_data[0]-first_data_pt[receiver.message_protocol.headerlist.index('timestamp_s')] + (ts_data[1]-first_data_pt[receiver.message_protocol.headerlist.index('timestamp_ns')])*(10**-9)
+            throughput = round(mssgcount/dur)
+            print("Messages Transmitted: \t\t", mssgcount, "\t\tmssg")
+            print("Communication Duration: \t", dur, "\tsec")
+            print("Resulting Throughput: \t\t", throughput, "\t\t(mssg/sec)")
             if testfname:
                 with open(testfname, "a+") as temp_file:
-                    temp_file.write("Max Throughput: \t%d\t\t(mssg/sec) \n" % mssgcount)
+                    temp_file.write("Max Throughput: \t%d\t\t(mssg/sec) \n" % throughput)
 
         print("Messages recieved:  ", mssgcount)

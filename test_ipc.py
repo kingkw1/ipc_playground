@@ -9,6 +9,7 @@ import os
 _inter_test_pause_dur = 1 # Time to close the socket and file between tests and avoid errors.
 _sender_receiver_latency = 0.1 # Time between start of receiver and start of sender.
 _testfname = "unittestresults.temp"
+_throughput_dur = 1
 
 class IPCTestCase(unittest.TestCase):
     """Unit tests for inter process communication"""
@@ -49,7 +50,7 @@ class IPCTestCase(unittest.TestCase):
         """Tests the IPC system in no sleep mode for 1 second to determine the maximum rate of transmission.
         """
         receiver = Process(target=TransferProtocol.receiver, args=('throughput',_testfname,))
-        sender = Process(target=TransferProtocol.sender, args=(0,1,))
+        sender = Process(target=TransferProtocol.sender, args=(0,_throughput_dur,))
 
         receiver.start()
         time.sleep(_sender_receiver_latency) # Necessary to ensure that receiver starts before sender
