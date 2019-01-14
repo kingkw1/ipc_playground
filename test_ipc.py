@@ -1,4 +1,4 @@
-from ftp import TransferProtocolTest
+from named_pipes import TransferProtocol
 import time
 from multiprocessing import Process
 from numpy import diff, sign
@@ -18,8 +18,8 @@ class IPCTestCase(unittest.TestCase):
         Tests the IPC system by running the system at 60Hz and reading data from the first saved data file. Timestamps from the data are checked for incremental increase.
         """
         # Prepare the sender and receiver processes
-        receiver = Process(target=TransferProtocolTest.receiver)
-        sender = Process(target=TransferProtocolTest.sender, args=(60,2,))
+        receiver = Process(target=TransferProtocol.receiver)
+        sender = Process(target=TransferProtocol.sender, args=(60,2,))
 
         # Start the processes
         receiver.start()
@@ -48,8 +48,8 @@ class IPCTestCase(unittest.TestCase):
     def test_throughput(self):
         """Tests the IPC system in no sleep mode for 1 second to determine the maximum rate of transmission.
         """
-        receiver = Process(target=TransferProtocolTest.receiver, args=('throughput',_testfname,))
-        sender = Process(target=TransferProtocolTest.sender, args=(0,1,))
+        receiver = Process(target=TransferProtocol.receiver, args=('throughput',_testfname,))
+        sender = Process(target=TransferProtocol.sender, args=(0,1,))
 
         receiver.start()
         time.sleep(_sender_receiver_latency) # Necessary to ensure that receiver starts before sender
@@ -66,8 +66,8 @@ class IPCTestCase(unittest.TestCase):
             3. generating a timestamp for comparison
         """
         # Prepare the sender and receiver processes
-        receiver = Process(target=TransferProtocolTest.receiver, args=('latency',_testfname,))
-        sender = Process(target=TransferProtocolTest.sender, args=(0,0,))
+        receiver = Process(target=TransferProtocol.receiver, args=('latency',_testfname,))
+        sender = Process(target=TransferProtocol.sender, args=(0,0,))
 
         # Start the processes
         receiver.start()
