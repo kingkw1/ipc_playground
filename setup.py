@@ -4,7 +4,9 @@ setup(
     name='mindx_ipc',
     version='0.0.0',
     description='Communicates messages between 2 processes running on the same pc.',
-    packages=['mindx_ipc'],
+    url='https://github.com/kingkw1/mindx_ipc',
+    author='Kevin King',
+    license='MIT',
     install_requires=['pandas',
                       'numpy'],
 )
