@@ -33,7 +33,7 @@ To demonstrate functionality, code can be run in one of two ways:
 	2. test_ipc.IPCTestCase().send_ftp()
 	* Note: Always run recv_ftp() first, as the sender will not wait for the receiver to join connection.
 * Run standard case unit test file in a terminal window
-	1. test_ipc.FTPTestCase.test_standard()
+	1. test_ipc.IPCTestCase.test_standard()
 	* Note: This option does not work in a Windows machine due to a [documented issue](https://github.com/Axelrod-Python/Axelrod/issues/718) in parallel processing.
 
 ### Solution and Rationale
