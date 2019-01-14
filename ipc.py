@@ -231,3 +231,17 @@ class ReceivingProtocol(ABC): # should this inherit packer also?
         """
         data = self.packer.unpack(mssg)
         return data
+
+class TransferProtocol(ABC): # should this inherit packer also?
+    """Defines the structure of transfer protocols. Transfer protocols must have a sender and a receiver.
+    """
+    def __init__(self):
+        super(TransferProtocol, self).__init__()
+
+    @abstractmethod
+    def sender(self):
+        pass
+
+    @abstractmethod
+    def receiver(self):
+        pass
