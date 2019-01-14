@@ -11,8 +11,8 @@ from abc import ABC, abstractmethod
 
 # TODO: generator functions & Message protocol comment update
 # TODO: underscore variables
-# TODO: jupyter notebook documentation
 # TODO: Readme file updates
+# TODO: jupyter notebook documentation
 # TODO: Scrub the challenge description
 class MessageProtocol:
     """Variable file structure unpacked from the designated json file.
@@ -123,9 +123,8 @@ class Stenographer:
         """
         super(Stenographer, self).__init__()
         self.file_len = file_len
-        self.filedataiter = 0
-        self.fileiter = 0
-        self.alldataiter = 0
+        self.__fileiter = 0
+        self.__alldataiter = 0
         self.message_protocol = MessageProtocol()
 
         # Make the datastore folder
@@ -159,25 +158,25 @@ class Stenographer:
         data    tuple   MessageProtocol following the format designated in the variables json file
         """
         # Check how many data points have been written
-        if self.dataiter >= self.file_len:
+        if self.__dataiter >= self.file_len:
             self.newfile()
 
         self.file.write(self.writeformat % tuple(data))
-        self.dataiter += 1
-        self.alldataiter += 1
+        self.__dataiter += 1
+        self.__alldataiter += 1
 
     def newfile(self):
         """Creates a new data file and updates the index file.
         """
-        self.dataiter = 0
+        self.__dataiter = 0
         if hasattr(self,'file'):
             self.close()
-            self.fileiter += 1
+            self.__fileiter += 1
 
-        filepath = os.path.join(self.filedir,str(self.fileiter)+'.csv')
+        filepath = os.path.join(self.filedir,str(self.__fileiter)+'.csv')
         self.file = open(filepath,'w')
         self.file.write(','.join(self.message_protocol.headerlist + self.message_protocol.varlist)+'\n')
-        self.index.write(str(self.alldataiter)+'\n')
+        self.index.write(str(self.__alldataiter)+'\n')
 
     def close(self):
         """Closes the current data file.

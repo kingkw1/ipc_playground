@@ -8,9 +8,9 @@ import pandas
 import unittest
 import os
 
-inter_test_pause_dur = 1 # Time to close the socket and file between tests and avoid errors.
-sender_receiver_latency = 0.1 # Time between start of receiver and start of sender.
-testfname = "ftptestresults.temp"
+_inter_test_pause_dur = 1 # Time to close the socket and file between tests and avoid errors.
+_sender_receiver_latency = 0.1 # Time between start of receiver and start of sender.
+_testfname = "ftptestresults.temp"
 
 class FTPTestCase(unittest.TestCase):
     """Unit tests for ftp.py"""
@@ -46,7 +46,7 @@ class FTPTestCase(unittest.TestCase):
 
         print("Messages sent:  ", mssgcount)
         if send_freq == 0 and dur == 1:
-            with open(testfname, "a+") as temp_file:
+            with open(_testfname, "a+") as temp_file:
                 throughput = mssgcount/dur
                 temp_file.write("Max Throughput: \t%d\t\t(mssg/sec) \n" % throughput)
                 print("Max Throughput: \t", throughput, "\t\t(mssg/sec) \n")
@@ -67,7 +67,7 @@ class FTPTestCase(unittest.TestCase):
             ts_data = Generator(MessageSource.TEST_PROCESS.value).generate_timestamp()
             dt = ts_data[0]-data[receiver.message_protocol.headerlist.index('timestamp_s')] + (ts_data[1]-data[receiver.message_protocol.headerlist.index('timestamp_ns')])*(10**-9)*1000
             print("Message latency: \t", dt,"\t(ms)")
-            with open(testfname, "a+") as temp_file:
+            with open(_testfname, "a+") as temp_file:
                 temp_file.write("Latency: \t\t%f\t(ms) \n" % dt)
         else:
             try:
@@ -94,7 +94,7 @@ class FTPTestCase(unittest.TestCase):
 
         # Start the processes
         receiver.start()
-        time.sleep(sender_receiver_latency) # Necessary to ensure that receiver starts before sender
+        time.sleep(_sender_receiver_latency) # Necessary to ensure that receiver starts before sender
         sender.start()
 
         # Wait until processes complete and join together to primary thread
@@ -114,7 +114,7 @@ class FTPTestCase(unittest.TestCase):
         self.assertTrue(all(sign(diff(ts))==1))
 
         # Pause to ensure sockets and files closed successfully
-        time.sleep(inter_test_pause_dur)
+        time.sleep(_inter_test_pause_dur)
 
     def test_throughput(self):
         """Tests the FTP communication system in no sleep mode to determine the maximum rate of transmission.
@@ -123,12 +123,12 @@ class FTPTestCase(unittest.TestCase):
         receiver = Process(target=self.recv_ftp)
 
         receiver.start()
-        time.sleep(sender_receiver_latency) # Necessary to ensure that receiver starts before sender
+        time.sleep(_sender_receiver_latency) # Necessary to ensure that receiver starts before sender
         sender.start()
 
         receiver.join()
         sender.join()
-        time.sleep(inter_test_pause_dur)
+        time.sleep(_inter_test_pause_dur)
 
     def test_latency(self):
         """Sends a single message through the defined protocol, and times it. Specifically, it evaluates the time to complete the following steps:
@@ -142,21 +142,21 @@ class FTPTestCase(unittest.TestCase):
 
         # Start the processes
         receiver.start()
-        time.sleep(sender_receiver_latency) # Necessary to ensure that receiver starts before sender
+        time.sleep(_sender_receiver_latency) # Necessary to ensure that receiver starts before sender
         start_time = time.time() # Start timer to evaluate message sending latency
         sender.start()
 
         # Wait until processes complete and join together to primary thread
         receiver.join()
         sender.join()
-        time.sleep(inter_test_pause_dur)
+        time.sleep(_inter_test_pause_dur)
 
     @classmethod
     def setUpClass(cls):
         """Deletes the temporary file used to store test results, if one somehow was left over.
         """
-        if os.path.exists(testfname):
-            os.remove(testfname)
+        if os.path.exists(_testfname):
+            os.remove(_testfname)
 
     @classmethod
     def tearDownClass(cls):
@@ -167,10 +167,10 @@ class FTPTestCase(unittest.TestCase):
         print('UNIT TEST SUMMARY:')
         print()
         print()
-        with open(testfname, 'r') as fin:
+        with open(_testfname, 'r') as fin:
             print(fin.read())
-        if os.path.exists(testfname):
-            os.remove(testfname)
+        if os.path.exists(_testfname):
+            os.remove(_testfname)
 
 if __name__ == "__main__":
     unittest.main()
