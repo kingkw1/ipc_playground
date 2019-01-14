@@ -18,8 +18,8 @@ In addition to a interprocess communication protocol, this code also includes a 
 * [__ftp.py__](ftp.py)
 	* Transmission methods for sending and receiving files using FTP. 
 
-* [__test_ftp.py__](test_ftp.py)
-	* Unit tests for ftp transmission. Tests standard use transmission, transmission latency, and maximum transmission speed. 
+* [__test_ipc.py__](test_ipc.py)
+	* Unit tests for ipc transmission. Tests standard use transmission, transmission latency, and maximum transmission speed. 
 	* Should be used as a template to build unit tests for alternative transmission protocols.
 
 * [__variables.json__](variables.json)
@@ -28,12 +28,12 @@ In addition to a interprocess communication protocol, this code also includes a 
 ---
 ### How to Run
 To demonstrate functionality, code can be run in one of two ways:
-* Run sender and receiver in separate terminal windows
-	1. test_ftp.FTPTestCase().recv_ftp()
-	2. test_ftp.FTPTestCase().send_ftp()
+* Run standard sender and standard receiver in separate terminal windows
+	1. test_ipc.IPCTestCase().recv_ftp()
+	2. test_ipc.IPCTestCase().send_ftp()
 	* Note: Always run recv_ftp() first, as the sender will not wait for the receiver to join connection.
 * Run standard case unit test file in a terminal window
-	1. test_ftp.FTPTestCase.test_standard()
+	1. test_ipc.IPCTestCase.test_standard()
 	* Note: This option does not work in a Windows machine due to a [documented issue](https://github.com/Axelrod-Python/Axelrod/issues/718) in parallel processing.
 
 ### Solution and Rationale
