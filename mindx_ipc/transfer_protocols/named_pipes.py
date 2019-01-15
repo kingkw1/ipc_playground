@@ -102,7 +102,7 @@ class TransferProtocol(ipc.TransferProtocol):
                 print("Message Latency: \t", dt,"\t(ms)")
                 if testfname:
                     with open(testfname, "a+") as temp_file:
-                        temp_file.write("Latency: \t\t%f\t(ms) \n" % dt)
+                        temp_file.write("Latency: \t%f\t(ms) \n" % dt)
             else:
                 # Stream mode
                 while True:

@@ -1,4 +1,4 @@
-from transfer_protocols.ftp import TransferProtocol
+from transfer_protocols.ftp import TransferProtocol as tp
 from core.stenographer import _data_dir
 import time
 from multiprocessing import Process
@@ -7,21 +7,34 @@ import pandas
 import unittest
 import os
 
+""" Provides the test cases to be used for all transfer protocols.
+UnitTests is best demonstrated in either of 2 ways.
+
+    1) cmd terminal: python mindx_ipc
+        - Use when in the mindx_ipc outer directory
+        - Use inputs to select the Transfer Protocol desired
+    2) cmd terminal: python test_ipc.py
+        - Use while in the mindx_ipc inner directory (mindx_ipc/mindx_ipc)
+        - manually modify the imported transfer_protocol above to make selection
+"""
+
+_testfname = "unittestresults.temp"
 _inter_test_pause_dur = 1 # Time to close the socket and file between tests and avoid errors.
 _sender_receiver_latency = 0.1 # Time between start of receiver and start of sender.
-_testfname = "unittestresults.temp"
-_throughput_dur = 1
+_throughput_dur = 1 # How long the sender will transmit messages to the receiver.
 
 class IPCTestCase(unittest.TestCase):
     """Unit tests for inter process communication"""
+
+    TransferProtocol = tp
 
     def test_standard(self):
         """
         Tests the IPC system by running the system at 60Hz and reading data from the first saved data file. Timestamps from the data are checked for incremental increase.
         """
         # Prepare the sender and receiver processes
-        receiver = Process(target=TransferProtocol.receiver)
-        sender = Process(target=TransferProtocol.sender, args=(60,2,))
+        receiver = Process(target=self.TransferProtocol.receiver)
+        sender = Process(target=self.TransferProtocol.sender, args=(60,2,))
 
         # Start the processes
         receiver.start()
@@ -49,8 +62,8 @@ class IPCTestCase(unittest.TestCase):
     def test_throughput(self):
         """Tests the IPC system in no sleep mode for 1 second to determine the maximum rate of transmission.
         """
-        receiver = Process(target=TransferProtocol.receiver, args=('throughput',_testfname,))
-        sender = Process(target=TransferProtocol.sender, args=(0,_throughput_dur,))
+        receiver = Process(target=self.TransferProtocol.receiver, args=('throughput',_testfname,))
+        sender = Process(target=self.TransferProtocol.sender, args=(0,_throughput_dur,))
 
         receiver.start()
         time.sleep(_sender_receiver_latency) # Necessary to ensure that receiver starts before sender
@@ -67,8 +80,8 @@ class IPCTestCase(unittest.TestCase):
             3. generating a timestamp for comparison
         """
         # Prepare the sender and receiver processes
-        receiver = Process(target=TransferProtocol.receiver, args=('latency',_testfname,))
-        sender = Process(target=TransferProtocol.sender, args=(0,0,))
+        receiver = Process(target=self.TransferProtocol.receiver, args=('latency',_testfname,))
+        sender = Process(target=self.TransferProtocol.sender, args=(0,0,))
 
         # Start the processes
         receiver.start()

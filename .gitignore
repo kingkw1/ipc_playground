@@ -1,6 +1,10 @@
 __pycache__/
 DataStore/
 mindx_ipc.egg-info/
+build/
+dist/
 .~lock.*
 *.temp
+*.pyc
 BCICodeChallenge.docx
+
