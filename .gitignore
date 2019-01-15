@@ -7,4 +7,4 @@ dist/
 *.temp
 *.pyc
 BCICodeChallenge.docx
-
+shared_memory.py
