@@ -1,5 +1,5 @@
 __pycache__/
-test_data/
+DataStore/
 mindx_ipc.egg-info/
 .~lock.*
 *.temp

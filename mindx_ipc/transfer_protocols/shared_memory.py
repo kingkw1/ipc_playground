@@ -1,20 +1,22 @@
-import ipc
-from message_regs import MessageSource, MessageCommand
+from core import ipcprotocols as ipc
+from MessageRegister import MessageSource, MessageCommand
 import time
+import mmap
 import os
 
-"""Methods used for inter-process communications using Named Pipes.
+"""Template for inter-process communication using message queues.
 """
 
-_pipename = 'fifo'
-
 class SendingProtocol(ipc.SendingProtocol):
-    """Establishes the sending end of the Named Pipe interprocess communication.
+    """Establishes the sending end of the IPC communication.
     """
     def __init__(self):
         super(SendingProtocol, self).__init__()
         print('Attempting to connect...')
-        self.pipe = os.fdopen(os.open(_pipename, os.O_NONBLOCK|os.O_WRONLY), 'wb', buffering=0, closefd=False)
+        # Create the file and fill it with line ends
+        fd = os.open('mmaptest', os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+        #os.write(fd, b'\n' * mmap.PAGESIZE)
+        buf = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         print('Sender Connected!')
 
     def send(self, data):
@@ -22,12 +24,12 @@ class SendingProtocol(ipc.SendingProtocol):
 
         data    tuple   MessageProtocol following the format designated in the variables json file
         """
-        if data[self.message_protocol.headerlist.index('mssgtype')] == 0:
+        if data[self.message_protocol.headerlist.index('mssgtype')] ==  MessageCommand.CLOSE_COM.value:
             self.closing_message(data)
         else:
             print('Sending data with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
         packed_data = self.encode(data)
-        self.pipe.write(packed_data)
+        # Send
 
     def closing_message(self, data):
         """Indicates communication termination.
@@ -35,23 +37,24 @@ class SendingProtocol(ipc.SendingProtocol):
         print('Sending TERMINATION message with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
 
 class ReceivingProtocol(ipc.ReceivingProtocol):
-    """Establishes the receiving end of the Named Pipe interprocess communications.
+    """Establishes the receiving end of the IPC communication.
     """
     def __init__(self):
         super(ReceivingProtocol, self).__init__()
 
-        if os.path.exists(_pipename):
-            os.remove(_pipename)
-        os.mkfifo(_pipename)
-
-        print('Awaiting connection...')
-        self.pipe = os.fdopen(os.open(_pipename, os.O_NONBLOCK|os.O_RDONLY), 'rb', buffering=0)
+        fd = os.open('mmaptest', os.O_RDONLY)
+        self.buffer = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_READ)
+        self.last = None
         print('Receiver Connected!')
 
     def recv(self):
         """Receives a message from the sender and unpacks it into a tuple.
         """
-        data = self.pipe.read(self.packer.size)
+        # Receive Data
+        self.buffer.seek(0)
+        data = self.buffer.readline()
+
+        self.last = data
         unpacked_data = self.decode(data)
         if unpacked_data[self.message_protocol.headerlist.index('mssgtype')] == 0:
             self.closing_message(unpacked_data)
@@ -59,17 +62,13 @@ class ReceivingProtocol(ipc.ReceivingProtocol):
             print('Received data with timestamp: ', unpacked_data[self.message_protocol.headerlist.index('timestamp_s')], ' ', unpacked_data[self.message_protocol.headerlist.index('timestamp_ns')])
         return unpacked_data
 
-    def close(self):
-        self.pipe.close()
-        os.remove(_pipename)
-
     def closing_message(self, data):
         """Indicates communication termination.
         """
         print('Received TERMINATION message with timestamp: ', data[self.message_protocol.headerlist.index('timestamp_s')], ' ', data[self.message_protocol.headerlist.index('timestamp_ns')])
 
 class TransferProtocol(ipc.TransferProtocol):
-    """Protocol for transferring messages using named_pipes.
+    """Protocol for transferring messages using IPC.
     """
     def __init__(self):
             super(TransferProtocol, self).__init__()
@@ -133,7 +132,7 @@ class TransferProtocol(ipc.TransferProtocol):
             print("Resulting Throughput: \t\t", throughput, "\t\t(mssg/sec)")
             if testfname:
                 with open(testfname, "a+") as temp_file:
-                    temp_file.write("Max Throughput: \t%d\t\t(mssg/sec) \n" % throughput)
+                    temp_file.write("Throughput: \t%d\t\t(mssg/sec) \n" % throughput)
 
     def sender(send_freq = 60, dur = 2):
         # Interpret the inputs
@@ -160,3 +159,31 @@ class TransferProtocol(ipc.TransferProtocol):
         mssgcount += 1
 
         print("Messages sent:  ", mssgcount)
+
+def tempsender():
+    # Create the file and fill it with line ends
+    fd = os.open('mmaptest', os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+    os.write(fd, b'\n' * mmap.PAGESIZE)
+
+    # Map it to memory and write some data to it, then change it 10 seconds later
+    buf = mmap.mmap(fd, mmap.PAGESIZE, access=mmap.ACCESS_WRITE)
+    buf.write(b'now we are in memory\n')
+    time.sleep(10)
+    buf.seek(0)
+    buf.write(b'again\n')
+
+def tempreceiver():
+    # Open the file for reading only
+    fd = os.open('mmaptest', os.O_RDONLY)
+    buf = mmap.mmap(fd, mmap.PAGESIZE, access=mmap.ACCESS_READ)
+
+    # Print when the content changes
+    last = b''
+    while True:
+        buf.seek(0)
+        msg = buf.readline()
+        if msg != last:
+            print(msg)
+            last = msg
+        else:
+            time.sleep(1)

@@ -1,4 +1,5 @@
-from TransferProtocols.named_pipes import TransferProtocol
+from transfer_protocols.ftp import TransferProtocol
+from core.stenographer import _data_dir
 import time
 from multiprocessing import Process
 from numpy import diff, sign
@@ -32,11 +33,10 @@ class IPCTestCase(unittest.TestCase):
         sender.join()
 
         # Check the data directory for newest file
-        data_dir = 'test_data'
         fname = '0.csv'
-        data_dir_list= os.listdir(data_dir)
+        data_dir_list= os.listdir(_data_dir)
         data_dir_list.sort()
-        filepath = os.path.join(os.getcwd(),data_dir,data_dir_list[0],fname)
+        filepath = os.path.join(os.getcwd(),_data_dir,data_dir_list[0],fname)
 
         # Read newest file data and evaluate timestamps
         data = pandas.read_csv(filepath, header = 0, delimiter=',')
