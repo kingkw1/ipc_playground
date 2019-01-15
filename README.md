@@ -8,6 +8,9 @@ In addition to a interprocess communication protocol, this code also includes a 
 2. [Set Up](#set-up)
 3. [How to Run](#how-to-run)
 4. [Solution and Rationale](#solution-and-rationale)
+	- [Transfer Protocol Selections and Design Trade-offs](#transfer-protocol-selections-and-design-trade-offs)
+	- [Modular Interfaces](#modular-interfaces)
+	- [Other Design Considerations](#other-design-considerations)
 ---
 ### File-Description:
 
