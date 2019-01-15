@@ -1,7 +1,6 @@
-import ipc
+from core import ipcprotocols as ipc
 from MessageDescriptors.MessageRegister import MessageSource, MessageCommand
 import time
-# IMPORT ALL THE REST OF THE THINGS
 
 """Template for inter-process communications.
 NOTE: This file is not meant to be used as an IPC itself.

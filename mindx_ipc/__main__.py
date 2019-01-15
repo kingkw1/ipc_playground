@@ -5,6 +5,8 @@ import os
 import unittest
 import importlib
 
+"""Manage user inputs to code to enable easier switching between transfer protocols."""
+
 def usage():
     print()
     print('usage: mindx_ipc [-m <run_mode>] [-t <transfer_protocol>]')
@@ -18,7 +20,7 @@ def main(argv):
     run_mode = 'test'
     transfer_protocol = 'named_pipes'
 
-    # Get Inputs
+    # Get Inputs & deploy them to variables
     try:
         opts, args = getopt.getopt(argv,"hr:t:",["help","run_mode=","transfer_protocol="])
     except getopt.GetoptError as err:
@@ -81,4 +83,5 @@ def main(argv):
         os.chdir(cwd)
 
 if __name__ == "__main__":
+    # skip the 0 input, which is currently running script name.
     main(sys.argv[1:])
