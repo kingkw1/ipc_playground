@@ -10,11 +10,11 @@ import os
 """ Provides the test cases to be used for all transfer protocols.
 UnitTests is best demonstrated in either of 2 ways.
 
-    1) cmd terminal: python mindx_ipc
-        - Use when in the mindx_ipc outer directory
+    1) cmd terminal: python ipc_playground
+        - Use when in the ipc_playground outer directory
         - Use inputs to select the Transfer Protocol desired
     2) cmd terminal: python test_ipc.py
-        - Use while in the mindx_ipc inner directory (mindx_ipc/mindx_ipc)
+        - Use while in the ipc_playground inner directory (ipc_playground/ipc_playground)
         - manually modify the imported transfer_protocol above to make selection
 """
 

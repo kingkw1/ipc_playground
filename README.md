@@ -14,24 +14,24 @@ In addition to a interprocess communication protocol, this code also includes a 
 ---
 ### File-Description:
 
-* [__core.messageprotocol.py__](/mindx_ipc/core/messageprotocol.py)
+* [__core.messageprotocol.py__](/ipc_playground/core/messageprotocol.py)
 	* Discerns the message protocol from Variables.json file. 
 	
-* [__core.generator.py__](/mindx_ipc/core/generator.py)
+* [__core.generator.py__](/ipc_playground/core/generator.py)
 	* Defines the random data generator using inputs from from Variables.json file. 
 
-* [__core.stenographer.py__](/mindx_ipc/core/stenographer.py)
+* [__core.stenographer.py__](/ipc_playground/core/stenographer.py)
 	* Defines the data logging methods. 
 	* Each session is saved with an index file, and increasing numbered files.
 	* Amount of data saved per numbered file is set in this submodule
 
-* [__core.ipcprotocols.py__](/mindx_ipc/core/ipcprotocols.py)
+* [__core.ipcprotocols.py__](/ipc_playground/core/ipcprotocols.py)
 	* Lays down the common functionality to be used by transfer protocols.
 
-* [__transfer_protocols__](mindx_ipc/transfer_protocols/)
+* [__transfer_protocols__](ipc_playground/transfer_protocols/)
 	* Transmission methods for sending and receiving files. 
 	* Currently supporting ftp and named_pipes.
-	* [template.py](mindx_ipc/transfer_protocols/_template.py) is provided to give core functionality and structure for newly added transfer protocols.
+	* [template.py](ipc_playground/transfer_protocols/_template.py) is provided to give core functionality and structure for newly added transfer protocols.
 	* Note: all files here inherit from core.ipcprotocols.py, and I've attempted to standardize their usage. Thus, there is some reptition the code within these files. I felt that this was acceptable given the inconsistencies in the transfer protocols main loops -- particularly with respect to the "try" commands.
 
 * [__test_ipc.py__](test_ipc.py)
@@ -62,12 +62,12 @@ Easily done with following command from terminal in base directory:
 	
 ### How to Run
 To quickly demonstrate functionality, code can be run in one of two ways:
-* Run standard sender and standard receiver in separate terminal windows (in mindx_ipc directory)
-	1. python mindx_ipc -r receiver -t named_pipes
-	2. python mindx_ipc -r sender -t named_pipes
+* Run standard sender and standard receiver in separate terminal windows (in ipc_playground directory)
+	1. python ipc_playground -r receiver -t named_pipes
+	2. python ipc_playground -r sender -t named_pipes
 	* Note: Always run recv_ftp() first, as the sender will not wait for the receiver to join connection.
-* Run standard case unit test file in a terminal window (in mindx_ipc directory)
-	1. python mindx_ipc
+* Run standard case unit test file in a terminal window (in ipc_playground directory)
+	1. python ipc_playground
 	* Note: This uses parallel processing to run both from the same terminal simultaneously. This option does not work in a Windows machine due to a [documented issue](https://github.com/Axelrod-Python/Axelrod/issues/718) in parallel processing.
 
 ### Solution and Rationale

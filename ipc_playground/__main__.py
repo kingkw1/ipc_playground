@@ -9,7 +9,7 @@ import importlib
 
 def usage():
     print()
-    print('usage: mindx_ipc [-m <run_mode>] [-t <transfer_protocol>]')
+    print('usage: ipc_playground [-m <run_mode>] [-t <transfer_protocol>]')
     print()
     print('   run_modes supported: \t\t test (default), sender, receiver')
     print('   transfer_protocols supportd: \t named_pipes (default), ftp')
@@ -51,7 +51,7 @@ def main(argv):
     try:
         # Step into main directory
         cwd = os.getcwd()
-        os.chdir(os.path.join(cwd,'mindx_ipc'))
+        os.chdir(os.path.join(cwd,'ipc_playground'))
 
         # Operations based on input run_mode
         if run_mode == 'test':
