@@ -1,5 +1,5 @@
-# mindx_ipc
-For the MindX coding challenge, this code is used to communicates messages between 2 processes running on the same pc.
+# ipc_playground
+This code is used to test IPC protocols communicating messages between 2 processes running on the same pc.
 
 In addition to a interprocess communication protocol, this code also includes a message protocol, random data generator, a data file storing system, and unit tests that can be used to evalute the system.
 
